@@ -440,12 +440,17 @@ let strangerHasCam = true;
 
 const ICE_SERVERS = {
   iceServers: [
-    { urls: 'stun:stun.relay.metered.ca:80' },
-    { urls: 'turn:global.relay.metered.ca:80',                    username: 'eaf38898f344bf1626a77080', credential: 'znMiTicI+maQ5b1w' },
-    { urls: 'turn:global.relay.metered.ca:80?transport=tcp',      username: 'eaf38898f344bf1626a77080', credential: 'znMiTicI+maQ5b1w' },
-    { urls: 'turn:global.relay.metered.ca:443',                   username: 'eaf38898f344bf1626a77080', credential: 'znMiTicI+maQ5b1w' },
-    { urls: 'turns:global.relay.metered.ca:443?transport=tcp',    username: 'eaf38898f344bf1626a77080', credential: 'znMiTicI+maQ5b1w' },
-  ]
+    {
+      urls: [
+        'turn:global.relay.metered.ca:80',
+        'turn:global.relay.metered.ca:80?transport=tcp',
+        'turns:global.relay.metered.ca:443?transport=tcp'
+      ],
+      username: 'eaf38898f344bf1626a77080',
+      credential: 'znMiTicI+maQ5b1w'
+    }
+  ],
+  iceTransportPolicy: 'relay'
 };
 
 // ═══════════════════════════════════════════
