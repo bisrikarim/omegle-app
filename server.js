@@ -5,6 +5,35 @@ const { Server } = require('socket.io');
 const app = express();
 app.use(express.static(path.join(__dirname, 'public')));
 
+// ── Cloudflare TURN credentials endpoint ──
+const CF_TURN_TOKEN_ID = process.env.CF_TURN_TOKEN_ID;
+const CF_TURN_API_TOKEN = process.env.CF_TURN_API_TOKEN;
+
+app.get('/api/turn-credentials', async (req, res) => {
+  if (!CF_TURN_TOKEN_ID || !CF_TURN_API_TOKEN) {
+    // Fallback si pas de credentials Cloudflare configurés
+    return res.json({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+  }
+  try {
+    const response = await fetch(
+      `https://rtc.live.cloudflare.com/v1/turn/keys/${CF_TURN_TOKEN_ID}/credentials/generate-ice-servers`,
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${CF_TURN_API_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ ttl: 86400 })
+      }
+    );
+    const data = await response.json();
+    res.json(data);
+  } catch (e) {
+    console.error('TURN credentials error:', e);
+    res.status(500).json({ error: 'Failed to get TURN credentials' });
+  }
+});
+
 let server;
 
 // ── Local : HTTPS avec certificat auto-signé

@@ -460,20 +460,23 @@ let camEnabled    = true;
 let micEnabled    = true;
 let strangerHasCam = true;
 
-const ICE_SERVERS = {
-  iceServers: [
-    {
-      urls: [
-        'turn:global.relay.metered.ca:80',
-        'turn:global.relay.metered.ca:80?transport=tcp',
-        'turns:global.relay.metered.ca:443?transport=tcp'
-      ],
-      username: 'eaf38898f344bf1626a77080',
-      credential: 'znMiTicI+maQ5b1w'
+let ICE_SERVERS = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }], iceTransportPolicy: 'relay' };
+
+async function fetchTurnCredentials() {
+  try {
+    const res = await fetch('/api/turn-credentials');
+    const data = await res.json();
+    if (data.iceServers) {
+      ICE_SERVERS = { iceServers: data.iceServers, iceTransportPolicy: 'relay' };
+      console.log('✅ TURN credentials loaded from Cloudflare');
     }
-  ],
-  iceTransportPolicy: 'relay'
-};
+  } catch(e) {
+    console.warn('⚠ Could not fetch TURN credentials, using fallback STUN');
+  }
+}
+
+// Charger les credentials au démarrage
+fetchTurnCredentials();
 
 // ═══════════════════════════════════════════
 //  UI HELPERS
