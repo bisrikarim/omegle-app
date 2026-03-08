@@ -460,7 +460,8 @@ let camEnabled    = true;
 let micEnabled    = true;
 let strangerHasCam = true;
 
-let ICE_SERVERS = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }], iceTransportPolicy: 'relay' };
+let ICE_SERVERS = null;
+let turnCredentialsPromise = null;
 
 async function fetchTurnCredentials() {
   try {
@@ -469,14 +470,22 @@ async function fetchTurnCredentials() {
     if (data.iceServers) {
       ICE_SERVERS = { iceServers: data.iceServers, iceTransportPolicy: 'relay' };
       console.log('✅ TURN credentials loaded from Cloudflare');
+    } else {
+      ICE_SERVERS = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
     }
   } catch(e) {
     console.warn('⚠ Could not fetch TURN credentials, using fallback STUN');
+    ICE_SERVERS = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
   }
 }
 
 // Charger les credentials au démarrage
-fetchTurnCredentials();
+turnCredentialsPromise = fetchTurnCredentials();
+
+async function getIceServers() {
+  if (!ICE_SERVERS) await turnCredentialsPromise;
+  return ICE_SERVERS;
+}
 
 // ═══════════════════════════════════════════
 //  UI HELPERS
@@ -700,7 +709,7 @@ async function switchCamera() {
 
 async function startWebRTC() {
   if (!localStream) return;
-  createPeerConnection();
+  await createPeerConnection();
   localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
 
   const offer = await pc.createOffer();
@@ -708,9 +717,10 @@ async function startWebRTC() {
   socket.emit('webrtc_offer', { sdp: pc.localDescription });
 }
 
-function createPeerConnection() {
+async function createPeerConnection() {
   if (pc) { pc.close(); pc = null; }
-  pc = new RTCPeerConnection(ICE_SERVERS);
+  const iceConfig = await getIceServers();
+  pc = new RTCPeerConnection(iceConfig);
 
   pc.onicecandidate = e => {
     if (e.candidate) socket.emit('webrtc_ice_candidate', { candidate: e.candidate });
@@ -734,7 +744,7 @@ function createPeerConnection() {
 // ── Signaling listeners ──
 socket.on('webrtc_offer', async ({ sdp }) => {
   if (!localStream) await initMedia();
-  createPeerConnection();
+  await createPeerConnection();
   if (localStream) localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
 
   await pc.setRemoteDescription(new RTCSessionDescription(sdp));
