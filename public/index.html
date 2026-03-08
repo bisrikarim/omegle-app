@@ -388,7 +388,7 @@
     <div class="chat-status-bar">
       <div class="status-label">
         <span class="dot green pulse"></span>
-        Connected to a stranger
+        Connected to a stranger <span id="chat-timer" style="opacity:0.5; margin-left:6px;"></span>
       </div>
       <div class="chat-actions">
         <button class="btn-next" onclick="nextChat()">Next ›</button>
@@ -536,6 +536,8 @@ socket.on('matched', async ({ role, common }) => {
   showScreen('chat-screen');
   addSystemMessage('You are now chatting with a stranger. Say hi!');
   document.getElementById('msg-input').focus();
+  playConnectSound();
+  startTimer();
 
   if (chatMode === 'video') {
     document.getElementById('video-panel').classList.add('visible');
@@ -770,8 +772,54 @@ function stopMedia() {
   camEnabled = true;
   micEnabled = true;
 }
+
+// ═══════════════════════════════════════════
+//  NOTIFICATION SOUND
+// ═══════════════════════════════════════════
+function playConnectSound() {
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.15);
+    gain.gain.setValueAtTime(0.15, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.3);
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════
+//  CONVERSATION TIMER
+// ═══════════════════════════════════════════
+let timerInterval = null;
+let timerSeconds = 0;
+
+function startTimer() {
+  stopTimer();
+  timerSeconds = 0;
+  const el = document.getElementById('chat-timer');
+  if (el) el.textContent = '· 00:00';
+  timerInterval = setInterval(() => {
+    timerSeconds++;
+    const m = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+    const s = String(timerSeconds % 60).padStart(2, '0');
+    if (el) el.textContent = `· ${m}:${s}`;
+  }, 1000);
+}
+
+function stopTimer() {
+  if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+  const el = document.getElementById('chat-timer');
+  if (el) el.textContent = '';
+}
 function cleanup() {
   stopMedia();
+  stopTimer();
   clearMessages();
 }
 </script>
