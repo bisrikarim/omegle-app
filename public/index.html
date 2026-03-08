@@ -2,7 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0a0a0f" />
+  <link rel="manifest" href="/manifest.json" />
   <title>Strangers</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
@@ -257,10 +262,46 @@
 
     @media (max-width: 700px) {
       .stats { display: none; }
+
+      /* Chat en colonne : vidéos en haut, chat en bas */
       #chat-screen.active { flex-direction: column; }
-      .video-panel { width: 100%; height: 240px; flex-direction: row; border-right: none; border-bottom: 1px solid var(--border); }
+
+      /* Vidéos côte à côte en haut */
+      .video-panel {
+        width: 100%; height: 220px;
+        flex-direction: row;
+        border-right: none; border-bottom: 1px solid var(--border);
+        flex-shrink: 0;
+      }
       .video-slot + .video-slot { border-top: none; border-left: 3px solid var(--bg); }
+
+      /* Contrôles plus grands pour le touch */
+      .ctrl-btn { padding: 10px 12px; font-size: 0.75rem; }
+      .media-controls { padding: 8px; gap: 8px; }
+
+      /* Messages */
       .msg { max-width: 88%; }
+
+      /* Input fixe en bas, pas caché par le clavier */
+      .chat-main { min-height: 0; }
+      .chat-input-wrap { padding: 8px 10px 12px; }
+
+      /* Boutons Next/Stop plus accessibles */
+      .btn-next, .btn-stop { padding: 8px 16px; font-size: 0.75rem; }
+
+      /* Fix iOS : empêche le zoom sur l'input */
+      #msg-input { font-size: 16px; }
+      #interests-input { font-size: 16px; }
+
+      /* Header compact */
+      header { padding: 10px 16px; }
+      .logo { font-size: 1rem; }
+
+      /* Home screen adapté */
+      #home-screen { gap: 18px; padding: 16px; }
+      .hero h1 { font-size: 2rem; }
+      .mode-btn { padding: 10px 16px; }
+      .btn-start { padding: 12px 36px; }
     }
   </style>
 </head>
@@ -329,6 +370,7 @@
       <div class="media-controls" id="media-controls">
         <button class="ctrl-btn" id="btn-cam" onclick="toggleCam()">📹 Cam on</button>
         <button class="ctrl-btn" id="btn-mic" onclick="toggleMic()">🎤 Mic on</button>
+        <button class="ctrl-btn" id="btn-switch" onclick="switchCamera()" style="display:none">🔄 Flip</button>
         <div class="p2p-badge">peer-to-peer · encrypted</div>
       </div>
     </div>
@@ -563,14 +605,58 @@ msgInput.addEventListener('input', () => {
 // ═══════════════════════════════════════════
 //  WEBRTC
 // ═══════════════════════════════════════════
-async function initMedia() {
+let wakeLock = null;
+
+async function acquireWakeLock() {
   try {
-    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    if ('wakeLock' in navigator) {
+      wakeLock = await navigator.wakeLock.request('screen');
+    }
+  } catch(e) {}
+}
+
+async function releaseWakeLock() {
+  if (wakeLock) { await wakeLock.release(); wakeLock = null; }
+}
+
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+async function initMedia() {
+  const videoConstraints = isMobile
+    ? { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
+    : { width: { ideal: 1280 }, height: { ideal: 720 } };
+
+  try {
+    localStream = await navigator.mediaDevices.getUserMedia({
+      video: videoConstraints,
+      audio: true
+    });
     document.getElementById('video-you').srcObject = localStream;
+    await acquireWakeLock();
   } catch(e) {
     addSystemMessage('⚠ Could not access camera/mic. Text chat only.');
     localStream = null;
   }
+}
+
+// Bouton switch caméra (mobile uniquement)
+let currentFacingMode = 'user';
+async function switchCamera() {
+  if (!localStream || !isMobile) return;
+  currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+  localStream.getVideoTracks().forEach(t => t.stop());
+  try {
+    const newStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: currentFacingMode, width: { ideal: 640 }, height: { ideal: 480 } },
+      audio: false
+    });
+    const newVideoTrack = newStream.getVideoTracks()[0];
+    const sender = pc ? pc.getSenders().find(s => s.track && s.track.kind === 'video') : null;
+    if (sender) sender.replaceTrack(newVideoTrack);
+    localStream.getVideoTracks().forEach(t => localStream.removeTrack(t));
+    localStream.addTrack(newVideoTrack);
+    document.getElementById('video-you').srcObject = localStream;
+  } catch(e) {}
 }
 
 async function startWebRTC() {
@@ -659,6 +745,7 @@ function stopMedia() {
     localStream = null;
   }
   if (pc) { pc.close(); pc = null; }
+  releaseWakeLock();
   document.getElementById('video-you').srcObject = null;
   document.getElementById('video-stranger').srcObject = null;
   document.getElementById('video-panel').classList.remove('visible');
