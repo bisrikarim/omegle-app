@@ -263,33 +263,41 @@
     @media (max-width: 700px) {
       .stats { display: none; }
 
-      /* Chat en colonne : vidéos en haut, chat en bas */
+      /* Layout colonne : vidéos en haut, chat en bas */
       #chat-screen.active { flex-direction: column; }
 
-      /* Vidéos côte à côte en haut */
+      /* Panneau vidéo : stranger en haut, toi en bas, pleine largeur */
       .video-panel {
-        width: 100%; height: 220px;
-        flex-direction: row;
-        border-right: none; border-bottom: 1px solid var(--border);
+        width: 100%;
+        height: 55vw; /* proportionnel à la largeur écran */
+        max-height: 320px;
+        flex-direction: column; /* stranger haut / you bas — comme desktop */
+        border-right: none;
+        border-bottom: 1px solid var(--border);
         flex-shrink: 0;
       }
-      .video-slot + .video-slot { border-top: none; border-left: 3px solid var(--bg); }
+      .video-slot + .video-slot {
+        border-top: 3px solid var(--bg);
+        border-left: none;
+      }
 
-      /* Contrôles plus grands pour le touch */
-      .ctrl-btn { padding: 10px 12px; font-size: 0.75rem; }
-      .media-controls { padding: 8px; gap: 8px; }
+      /* Contrôles media en bas du panneau vidéo */
+      .media-controls { padding: 6px 8px; gap: 6px; }
+      .ctrl-btn { padding: 8px 10px; font-size: 0.72rem; }
+
+      /* Chat prend le reste */
+      .chat-main { flex: 1; min-height: 0; }
 
       /* Messages */
       .msg { max-width: 88%; }
 
-      /* Input fixe en bas, pas caché par le clavier */
-      .chat-main { min-height: 0; }
-      .chat-input-wrap { padding: 8px 10px 12px; }
+      /* Input accessible */
+      .chat-input-wrap { padding: 8px 10px 10px; }
 
-      /* Boutons Next/Stop plus accessibles */
-      .btn-next, .btn-stop { padding: 8px 16px; font-size: 0.75rem; }
+      /* Boutons Next/Stop */
+      .btn-next, .btn-stop { padding: 7px 14px; font-size: 0.72rem; }
 
-      /* Fix iOS : empêche le zoom sur l'input */
+      /* Fix iOS zoom sur les inputs */
       #msg-input { font-size: 16px; }
       #interests-input { font-size: 16px; }
 
@@ -297,7 +305,7 @@
       header { padding: 10px 16px; }
       .logo { font-size: 1rem; }
 
-      /* Home screen adapté */
+      /* Home screen */
       #home-screen { gap: 18px; padding: 16px; }
       .hero h1 { font-size: 2rem; }
       .mode-btn { padding: 10px 16px; }
