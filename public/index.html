@@ -849,7 +849,7 @@ function cleanup() {
 //  DEVICE PICKER (desktop only)
 // ═══════════════════════════════════════════
 async function initDevicePicker() {
-  if (isMobile) return;
+  if (window.innerWidth <= 700) return;
   document.getElementById('btn-devices').style.display = 'flex';
 
   const devices = await navigator.mediaDevices.enumerateDevices();
