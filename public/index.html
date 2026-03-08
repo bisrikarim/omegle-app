@@ -260,6 +260,9 @@
     #stranger-cam-off .icon { font-size: 2rem; opacity: 0.2; }
     #stranger-cam-off.show { display: flex; }
 
+    #device-panel { display: none; }
+    #device-panel.open { display: flex !important; }
+
     @media (max-width: 700px) {
       .stats { display: none; }
 
@@ -378,7 +381,26 @@
         <button class="ctrl-btn" id="btn-cam" onclick="toggleCam()">📹 Cam on</button>
         <button class="ctrl-btn" id="btn-mic" onclick="toggleMic()">🎤 Mic on</button>
         <button class="ctrl-btn" id="btn-switch" onclick="switchCamera()" style="display:none">🔄 Flip</button>
+        <button class="ctrl-btn" id="btn-devices" onclick="toggleDevicePanel()" style="display:none">⚙ Devices</button>
         <div class="p2p-badge">peer-to-peer · encrypted</div>
+      </div>
+      <!-- Device picker panel (desktop only) -->
+      <div id="device-panel" style="display:none; padding:10px 12px; background:var(--surface); border-top:1px solid var(--border); gap:8px; flex-direction:column;">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <label style="color:var(--muted);font-size:0.72rem;width:80px;flex-shrink:0;">📹 Camera</label>
+          <select id="select-cam" style="flex:1;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:0.72rem;font-family:inherit;"></select>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <label style="color:var(--muted);font-size:0.72rem;width:80px;flex-shrink:0;">🎤 Micro</label>
+          <select id="select-mic" style="flex:1;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:0.72rem;font-family:inherit;"></select>
+        </div>
+        <div id="speaker-row" style="display:flex; gap:8px; align-items:center;">
+          <label style="color:var(--muted);font-size:0.72rem;width:80px;flex-shrink:0;">🔊 Speaker</label>
+          <select id="select-speaker" style="flex:1;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:0.72rem;font-family:inherit;"></select>
+        </div>
+        <button onclick="applyDevices()" style="align-self:flex-end;background:var(--accent);color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:0.72rem;font-family:inherit;cursor:pointer;">Apply</button>
+      </div>
+      <div style="display:none">
       </div>
     </div>
 
@@ -821,6 +843,98 @@ function cleanup() {
   stopMedia();
   stopTimer();
   clearMessages();
+}
+
+// ═══════════════════════════════════════════
+//  DEVICE PICKER (desktop only)
+// ═══════════════════════════════════════════
+async function initDevicePicker() {
+  if (isMobile) return;
+  document.getElementById('btn-devices').style.display = 'flex';
+
+  const devices = await navigator.mediaDevices.enumerateDevices();
+
+  const camSel     = document.getElementById('select-cam');
+  const micSel     = document.getElementById('select-mic');
+  const spkSel     = document.getElementById('select-speaker');
+  const spkRow     = document.getElementById('speaker-row');
+
+  camSel.innerHTML = '';
+  micSel.innerHTML = '';
+  spkSel.innerHTML = '';
+
+  devices.forEach(d => {
+    const opt = document.createElement('option');
+    opt.value = d.deviceId;
+    opt.textContent = d.label || d.deviceId.slice(0, 20);
+    if (d.kind === 'videoinput')  camSel.appendChild(opt);
+    if (d.kind === 'audioinput')  micSel.appendChild(opt);
+    if (d.kind === 'audiooutput') spkSel.appendChild(opt);
+  });
+
+  // Pré-sélectionner les devices actifs
+  if (localStream) {
+    const vTrack = localStream.getVideoTracks()[0];
+    const aTrack = localStream.getAudioTracks()[0];
+    if (vTrack) { const id = vTrack.getSettings().deviceId; if (id) camSel.value = id; }
+    if (aTrack) { const id = aTrack.getSettings().deviceId; if (id) micSel.value = id; }
+  }
+
+  // Speaker : Chrome/Edge uniquement
+  const videoEl = document.getElementById('video-stranger');
+  if (typeof videoEl.setSinkId === 'function') {
+    spkRow.style.display = 'flex';
+  } else {
+    spkRow.style.display = 'none';
+  }
+}
+
+function toggleDevicePanel() {
+  const panel = document.getElementById('device-panel');
+  if (!panel.classList.contains('open')) {
+    initDevicePicker();
+    panel.classList.add('open');
+  } else {
+    panel.classList.remove('open');
+  }
+}
+
+async function applyDevices() {
+  const camId = document.getElementById('select-cam').value;
+  const micId = document.getElementById('select-mic').value;
+  const spkId = document.getElementById('select-speaker').value;
+
+  // Remplacer les tracks sans couper l'appel
+  try {
+    const newStream = await navigator.mediaDevices.getUserMedia({
+      video: { deviceId: { exact: camId } },
+      audio: { deviceId: { exact: micId } }
+    });
+
+    // Remplacer dans la connexion WebRTC si active
+    if (pc) {
+      const senders = pc.getSenders();
+      for (const track of newStream.getTracks()) {
+        const sender = senders.find(s => s.track && s.track.kind === track.kind);
+        if (sender) await sender.replaceTrack(track);
+      }
+    }
+
+    // Arrêter les anciennes tracks
+    if (localStream) localStream.getTracks().forEach(t => t.stop());
+    localStream = newStream;
+    document.getElementById('video-you').srcObject = localStream;
+
+    // Appliquer le speaker si supporté
+    const videoEl = document.getElementById('video-stranger');
+    if (spkId && typeof videoEl.setSinkId === 'function') {
+      await videoEl.setSinkId(spkId);
+    }
+
+    document.getElementById('device-panel').classList.remove('open');
+  } catch(e) {
+    console.error('Device switch error:', e);
+  }
 }
 </script>
 </body>
