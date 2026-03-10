@@ -295,6 +295,17 @@
     #device-panel { display: none; }
     #device-panel.open { display: flex !important; }
 
+
+    .mobile-live-dot {
+      display: none;
+      position: absolute;
+      top: 10px; left: 10px;
+      z-index: 10;
+    }
+    .mobile-live-dot .dot {
+      width: 10px; height: 10px;
+    }
+
     @media (max-width: 700px) {
       .stats { display: none; }
 
@@ -320,6 +331,8 @@
       .ctrl-btn { padding: 8px 10px; font-size: 0.72rem; }
       #btn-devices { display: none !important; }
       .p2p-badge { display: none; }
+      .status-label { display: none; }
+      .mobile-live-dot { display: block; }
 
       /* Chat prend le reste */
       .chat-main { flex: 1; min-height: 0; }
@@ -409,6 +422,7 @@
         <video id="video-stranger" autoplay playsinline></video>
         <div id="stranger-cam-off"><i class="fa-solid fa-video-slash"></i> camera off</div>
         <div class="v-label stranger">stranger</div>
+        <div class="mobile-live-dot" id="mobile-live-dot"><span class="dot green pulse"></span></div>
       </div>
       <div class="video-slot">
         <video id="video-you" autoplay playsinline muted></video>
