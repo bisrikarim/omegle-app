@@ -9,6 +9,7 @@
   <meta name="theme-color" content="#0a0a0f" />
   <link rel="manifest" href="/manifest.json" />
   <title>Strangers</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Syne:wght@400;700;800&display=swap" rel="stylesheet">
   <style>
@@ -356,7 +357,7 @@
         <div class="stat-item"><span class="dot green pulse"></span><span id="stat-online">0</span> online</div>
         <div class="stat-item"><span class="dot"></span><span id="stat-chatting">0</span> chatting</div>
       </div>
-      <button id="theme-toggle" onclick="toggleTheme()">☀ Light</button>
+      <button id="theme-toggle" onclick="toggleTheme()"><i class="fa-solid fa-sun"></i> Light</button>
     </div>
   </header>
 
@@ -369,20 +370,20 @@
 
     <div class="mode-selector">
       <button class="mode-btn selected" id="mode-text" onclick="selectMode('text')">
-        <span class="icon">💬</span> Text only
+        <i class="fa-solid fa-comment"></i> Text only
       </button>
       <button class="mode-btn" id="mode-video" onclick="selectMode('video')">
-        <span class="icon">📹</span> Video + Text
+        <i class="fa-solid fa-video"></i> Video + Text
       </button>
     </div>
 
-    <button class="btn-start" onclick="startChat()">Start chatting →</button>
+    <button class="btn-start" onclick="startChat()"><i class="fa-solid fa-arrow-right-long"></i> Start chatting</button>
 
     <div class="interests-wrap">
       <div class="interests-label">Interests (optional)</div>
       <div class="interests-input-row">
         <input id="interests-input" type="text" placeholder="e.g. music, gaming, travel..." maxlength="30" />
-        <button class="btn-add-tag" onclick="addTag()">+ Add</button>
+        <button class="btn-add-tag" onclick="addTag()"><i class="fa-solid fa-plus"></i> Add</button>
       </div>
       <div class="tags-list" id="tags-list"></div>
     </div>
@@ -394,7 +395,7 @@
   <div id="waiting-screen" class="screen">
     <div class="spinner"></div>
     <div class="waiting-text">Looking for a stranger<span class="waiting-dots"></span></div>
-    <button class="btn-cancel" onclick="cancelSearch()">Cancel</button>
+    <button class="btn-cancel" onclick="cancelSearch()"><i class="fa-solid fa-xmark"></i> Cancel</button>
   </div>
 
   <!-- CHAT -->
@@ -404,7 +405,7 @@
     <div class="video-panel" id="video-panel">
       <div class="video-slot">
         <video id="video-stranger" autoplay playsinline></video>
-        <div id="stranger-cam-off"><span class="icon">📷</span>camera off</div>
+        <div id="stranger-cam-off"><i class="fa-solid fa-video-slash"></i> camera off</div>
         <div class="v-label stranger">stranger</div>
       </div>
       <div class="video-slot">
@@ -412,20 +413,20 @@
         <div class="v-label you">you</div>
       </div>
       <div class="media-controls" id="media-controls">
-        <button class="ctrl-btn" id="btn-cam" onclick="toggleCam()">📹 Cam on</button>
-        <button class="ctrl-btn" id="btn-mic" onclick="toggleMic()">🎤 Mic on</button>
-        <button class="ctrl-btn" id="btn-switch" onclick="switchCamera()" style="display:none">🔄 Flip</button>
-        <button class="ctrl-btn" id="btn-devices" onclick="toggleDevicePanel()" style="display:none">⚙ Devices</button>
+        <button class="ctrl-btn" id="btn-cam" onclick="toggleCam()"><i class="fa-solid fa-video"></i> Cam on</button>
+        <button class="ctrl-btn" id="btn-mic" onclick="toggleMic()"><i class="fa-solid fa-microphone"></i> Mic on</button>
+        <button class="ctrl-btn" id="btn-switch" onclick="switchCamera()" style="display:none"><i class="fa-solid fa-rotate"></i> Flip</button>
+        <button class="ctrl-btn" id="btn-devices" onclick="toggleDevicePanel()" style="display:none"><i class="fa-solid fa-sliders"></i> Devices</button>
         <div class="p2p-badge">peer-to-peer · encrypted</div>
       </div>
       <!-- Device picker panel (desktop only) -->
       <div id="device-panel" style="display:none; padding:10px 12px; background:var(--surface); border-top:1px solid var(--border); gap:8px; flex-direction:column;">
         <div style="display:flex; gap:8px; align-items:center;">
-          <label style="color:var(--muted);font-size:0.72rem;width:80px;flex-shrink:0;">📹 Camera</label>
+          <label style="color:var(--muted);font-size:0.72rem;width:80px;flex-shrink:0;"><i class="fa-solid fa-video"></i> Camera</label>
           <select id="select-cam" style="flex:1;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:0.72rem;font-family:inherit;"></select>
         </div>
         <div style="display:flex; gap:8px; align-items:center;">
-          <label style="color:var(--muted);font-size:0.72rem;width:80px;flex-shrink:0;">🎤 Micro</label>
+          <label style="color:var(--muted);font-size:0.72rem;width:80px;flex-shrink:0;"><i class="fa-solid fa-microphone"></i> Micro</label>
           <select id="select-mic" style="flex:1;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:0.72rem;font-family:inherit;"></select>
         </div>
         <div id="speaker-row" style="display:flex; gap:8px; align-items:center;">
@@ -447,8 +448,8 @@
         Connected to a stranger <span id="chat-timer" style="opacity:0.5; margin-left:6px;"></span>
       </div>
       <div class="chat-actions">
-        <button class="btn-next" onclick="nextChat()">Next ›</button>
-        <button class="btn-stop" onclick="stopChat()">Stop</button>
+        <button class="btn-next" onclick="nextChat()"><i class="fa-solid fa-forward-step"></i> Next</button>
+        <button class="btn-stop" onclick="stopChat()"><i class="fa-solid fa-stop"></i> Stop</button>
       </div>
     </div>
     <div class="common-banner" id="common-banner" style="display:none"></div>
@@ -457,7 +458,7 @@
     <div class="typing-indicator" id="typing-indicator"></div>
     <div class="chat-input-wrap">
       <input id="msg-input" type="text" placeholder="Type a message..." autocomplete="off" />
-      <button class="btn-send" onclick="sendMessage()">Send</button>
+      <button class="btn-send" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
     </div>
   </div>
 
@@ -465,11 +466,11 @@
 
   <!-- DISCONNECTED -->
   <div id="disconnected-screen" class="screen">
-    <div class="disc-icon">⌀</div>
+    <div class="disc-icon"><i class="fa-solid fa-link-slash"></i></div>
     <div class="disc-title">Stranger disconnected</div>
     <div class="disc-sub">The conversation has ended.</div>
     <div class="disc-btns">
-      <button class="btn-new" onclick="startChat()">New stranger →</button>
+      <button class="btn-new" onclick="startChat()"><i class="fa-solid fa-arrow-right-long"></i> New stranger</button>
       <button class="btn-home" onclick="goHome()">Home</button>
     </div>
   </div>
@@ -808,7 +809,7 @@ function toggleCam() {
   camEnabled = !camEnabled;
   localStream.getVideoTracks().forEach(t => t.enabled = camEnabled);
   const btn = document.getElementById('btn-cam');
-  btn.textContent = camEnabled ? '📹 Cam on' : '🚫 Cam off';
+  btn.innerHTML = camEnabled ? '<i class="fa-solid fa-video"></i> Cam on' : '<i class="fa-solid fa-video-slash"></i> Cam off';
   btn.classList.toggle('off', !camEnabled);
   socket.emit('webrtc_video_toggle', { enabled: camEnabled });
 }
@@ -817,7 +818,7 @@ function toggleMic() {
   micEnabled = !micEnabled;
   localStream.getAudioTracks().forEach(t => t.enabled = micEnabled);
   const btn = document.getElementById('btn-mic');
-  btn.textContent = micEnabled ? '🎤 Mic on' : '🔇 Mic off';
+  btn.innerHTML = micEnabled ? '<i class="fa-solid fa-microphone"></i> Mic on' : '<i class="fa-solid fa-microphone-slash"></i> Mic off';
   btn.classList.toggle('off', !micEnabled);
   socket.emit('webrtc_audio_toggle', { enabled: micEnabled });
 }
@@ -839,9 +840,9 @@ function stopMedia() {
   document.getElementById('video-panel').classList.remove('visible');
   document.getElementById('media-controls').classList.remove('visible');
   document.getElementById('stranger-cam-off').classList.remove('show');
-  document.getElementById('btn-cam').textContent = '📹 Cam on';
+  document.getElementById('btn-cam').innerHTML = '<i class="fa-solid fa-video"></i> Cam on';
   document.getElementById('btn-cam').classList.remove('off');
-  document.getElementById('btn-mic').textContent = '🎤 Mic on';
+  document.getElementById('btn-mic').innerHTML = '<i class="fa-solid fa-microphone"></i> Mic on';
   document.getElementById('btn-mic').classList.remove('off');
   camEnabled = true;
   micEnabled = true;
@@ -997,10 +998,10 @@ function applyTheme(theme) {
   const btn = document.getElementById('theme-toggle');
   if (theme === 'light') {
     root.classList.add('light');
-    if (btn) btn.textContent = '🌙 Dark';
+    if (btn) btn.innerHTML = '<i class="fa-solid fa-moon"></i> Dark';
   } else {
     root.classList.remove('light');
-    if (btn) btn.textContent = '☀ Light';
+    if (btn) btn.innerHTML = '<i class="fa-solid fa-sun"></i> Light';
   }
 }
 
