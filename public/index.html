@@ -296,6 +296,12 @@
     #device-panel.open { display: flex !important; }
 
 
+
+    /* Dark mode white text overrides */
+    :root:not(.light) .hero p { color: #ffffff; opacity: 0.85; }
+    :root:not(.light) .mode-btn { color: #ffffff; }
+    :root:not(.light) .interests-label { color: #ffffff; }
+
     .mobile-live-dot {
       display: none;
       position: absolute;
@@ -332,7 +338,13 @@
       #btn-devices { display: none !important; }
       .p2p-badge { display: none; }
       .status-label { display: none; }
-      .mobile-live-dot { display: block; }
+  
+    /* Dark mode white text overrides */
+    :root:not(.light) .hero p { color: #ffffff; opacity: 0.85; }
+    :root:not(.light) .mode-btn { color: #ffffff; }
+    :root:not(.light) .interests-label { color: #ffffff; }
+
+    .mobile-live-dot { display: block; }
 
       /* Chat prend le reste */
       .chat-main { flex: 1; min-height: 0; }
