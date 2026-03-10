@@ -28,6 +28,37 @@
       --danger: #f87171;
     }
 
+
+    :root.light {
+      --bg: #f5f5f7;
+      --surface: #ffffff;
+      --border: #e0e0e8;
+      --border-light: #d0d0e0;
+      --text: #1a1a2e;
+      --muted: #8888aa;
+      --accent: #7c6af7;
+      --accent-dim: rgba(124, 106, 247, 0.10);
+      --accent-glow: rgba(124, 106, 247, 0.20);
+      --green: #22c55e;
+      --danger: #ef4444;
+    }
+
+    :root.light body::before { opacity: 0.03; }
+
+    /* Theme toggle button */
+    #theme-toggle {
+      background: none;
+      border: 1px solid var(--border-light);
+      color: var(--muted);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 0.75rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    #theme-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
     html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace; overflow: hidden; }
 
     body::before {
@@ -320,9 +351,12 @@
 
   <header>
     <div class="logo">str<span>//</span>angers</div>
-    <div class="stats">
-      <div class="stat-item"><span class="dot green pulse"></span><span id="stat-online">0</span> online</div>
-      <div class="stat-item"><span class="dot"></span><span id="stat-chatting">0</span> chatting</div>
+    <div style="display:flex;align-items:center;gap:12px;">
+      <div class="stats">
+        <div class="stat-item"><span class="dot green pulse"></span><span id="stat-online">0</span> online</div>
+        <div class="stat-item"><span class="dot"></span><span id="stat-chatting">0</span> chatting</div>
+      </div>
+      <button id="theme-toggle" onclick="toggleTheme()">☀ Light</button>
     </div>
   </header>
 
@@ -954,6 +988,31 @@ async function applyDevices() {
     console.error('Device switch error:', e);
   }
 }
+
+// ═══════════════════════════════════════════
+//  THEME
+// ═══════════════════════════════════════════
+function applyTheme(theme) {
+  const root = document.documentElement;
+  const btn = document.getElementById('theme-toggle');
+  if (theme === 'light') {
+    root.classList.add('light');
+    if (btn) btn.textContent = '🌙 Dark';
+  } else {
+    root.classList.remove('light');
+    if (btn) btn.textContent = '☀ Light';
+  }
+}
+
+function toggleTheme() {
+  const current = document.documentElement.classList.contains('light') ? 'light' : 'dark';
+  const next = current === 'light' ? 'dark' : 'light';
+  localStorage.setItem('theme', next);
+  applyTheme(next);
+}
+
+// Appliquer le thème sauvegardé au chargement
+applyTheme(localStorage.getItem('theme') || 'dark');
 </script>
 </body>
 </html>
