@@ -2,9 +2,27 @@ const express  = require('express');
 const path     = require('path');
 const { Server } = require('socket.io');
 const { Pool }   = require('pg');
+const rateLimit  = require('express-rate-limit');
 
 const app = express();
 app.use(express.json());
+
+// Rate Limiting general: 100 req / 15min par IP
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests, please slow down.' }
+}));
+
+// Rate Limiting strict sur /api/report: 5 reports / 10min par IP
+app.use('/api/report', rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 5,
+  message: { error: 'Too many reports submitted. Please wait.' }
+}));
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ── PostgreSQL ──
@@ -306,10 +324,31 @@ io.on('connection', async (socket) => {
   } catch (e) {}
 
   broadcastStats();
+
+  // Socket rate limiting
+  const socketLimits = {
+    message: { count: 0, resetAt: Date.now() + 10000, max: 20 },  // 20 msgs / 10s
+    next:    { count: 0, resetAt: Date.now() + 60000, max: 15 },   // 15 next / 1min
+  };
+
+  function socketAllowed(key) {
+    const limit = socketLimits[key];
+    if (Date.now() > limit.resetAt) { limit.count = 0; limit.resetAt = Date.now() + (key === 'next' ? 60000 : 10000); }
+    if (limit.count >= limit.max) return false;
+    limit.count++;
+    return true;
+  }
+
   socket.on('find_partner', ({ interests } = {}) => tryMatch(socket, interests || []));
-  socket.on('message',  (data)     => forwardToPartner(socket, 'message', data));
+  socket.on('message',  (data) => {
+    if (!socketAllowed('message')) return socket.emit('rate_limited', { type: 'message' });
+    forwardToPartner(socket, 'message', data);
+  });
   socket.on('typing',   (isTyping) => forwardToPartner(socket, 'typing', isTyping));
-  socket.on('next',     () => { disconnect(socket); tryMatch(socket, []); });
+  socket.on('next',     () => {
+    if (!socketAllowed('next')) return socket.emit('rate_limited', { type: 'next' });
+    disconnect(socket); tryMatch(socket, []);
+  });
   socket.on('stop',     () => { disconnect(socket); socket.emit('stopped'); broadcastStats(); });
   socket.on('disconnect', () => { disconnect(socket); socketIPMap.delete(socket.id); });
   socket.on('webrtc_offer',         (data) => forwardToPartner(socket, 'webrtc_offer', data));
