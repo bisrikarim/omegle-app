@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>str//angers — Admin</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0f; --surface: #111118; --border: #1e1e2e;
+      --text: #e2e2f0; --muted: #5a5a7a; --accent: #7c6af7;
+      --green: #4ade80; --danger: #f87171; --warning: #fbbf24;
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Mono', monospace, sans-serif; min-height: 100vh; }
+    header { background: var(--surface); border-bottom: 1px solid var(--border); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+    .logo { font-size: 1.2rem; font-weight: 800; letter-spacing: -0.02em; }
+    .logo span { color: var(--accent); }
+    .badge { background: var(--danger); color: #fff; font-size: 0.65rem; padding: 2px 8px; border-radius: 4px; margin-left: 8px; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 24px 16px; }
+
+    /* Stats cards */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 28px; }
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; }
+    .stat-card .label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+    .stat-card .value { font-size: 1.8rem; font-weight: 700; }
+    .stat-card.green .value { color: var(--green); }
+    .stat-card.red .value { color: var(--danger); }
+    .stat-card.yellow .value { color: var(--warning); }
+    .stat-card.purple .value { color: var(--accent); }
+
+    /* Sections */
+    .section { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 20px; overflow: hidden; }
+    .section-header { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+    .section-header h2 { font-size: 0.85rem; font-weight: 600; }
+    .section-body { padding: 0; }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+    th { padding: 10px 16px; text-align: left; color: var(--muted); font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.06em; border-bottom: 1px solid var(--border); }
+    td { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: rgba(124,106,247,0.04); }
+
+    .ip { font-family: monospace; color: var(--accent); }
+    .count-badge { background: var(--danger); color: #fff; border-radius: 4px; padding: 2px 8px; font-size: 0.7rem; font-weight: 700; }
+    .count-badge.yellow { background: var(--warning); color: #000; }
+    .count-badge.green { background: var(--green); color: #000; }
+
+    /* Buttons */
+    .btn { border: none; border-radius: 4px; padding: 6px 14px; font-size: 0.72rem; font-family: inherit; cursor: pointer; transition: all 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-ban { background: var(--danger); color: #fff; }
+    .btn-ban:hover { background: #ef4444; }
+    .btn-unban { background: var(--green); color: #000; }
+    .btn-unban:hover { background: #22c55e; }
+    .btn-refresh { background: var(--border); color: var(--text); }
+    .btn-refresh:hover { background: var(--accent); color: #fff; }
+
+    .empty { padding: 32px; text-align: center; color: var(--muted); font-size: 0.78rem; }
+    .loading { padding: 24px; text-align: center; color: var(--muted); }
+
+    /* Toast */
+    #toast { position: fixed; bottom: 24px; right: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px 20px; font-size: 0.78rem; opacity: 0; transition: opacity 0.3s; pointer-events: none; z-index: 100; }
+    #toast.show { opacity: 1; }
+    #toast.success { border-color: var(--green); color: var(--green); }
+    #toast.error { border-color: var(--danger); color: var(--danger); }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">str<span>//</span>angers <span class="badge">ADMIN</span></div>
+  <button class="btn btn-refresh" onclick="loadAll()"><i class="fa-solid fa-rotate"></i> Refresh</button>
+</header>
+
+<div class="container">
+
+  <!-- Stats -->
+  <div class="stats-grid" id="stats-grid">
+    <div class="stat-card green"><div class="label">Online now</div><div class="value" id="s-online">—</div></div>
+    <div class="stat-card purple"><div class="label">Total reports</div><div class="value" id="s-reports">—</div></div>
+    <div class="stat-card yellow"><div class="label">Reports (24h)</div><div class="value" id="s-recent">—</div></div>
+    <div class="stat-card red"><div class="label">Banned IPs</div><div class="value" id="s-bans">—</div></div>
+  </div>
+
+  <!-- Reports -->
+  <div class="section">
+    <div class="section-header">
+      <h2><i class="fa-solid fa-flag"></i> Reports by IP</h2>
+    </div>
+    <div class="section-body">
+      <table>
+        <thead><tr><th>IP Address</th><th>Reports</th><th>Last Report</th><th>Action</th></tr></thead>
+        <tbody id="reports-body"><tr><td colspan="4" class="loading">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Banned IPs -->
+  <div class="section">
+    <div class="section-header">
+      <h2><i class="fa-solid fa-ban"></i> Banned IPs</h2>
+    </div>
+    <div class="section-body">
+      <table>
+        <thead><tr><th>IP Address</th><th>Reason</th><th>Banned at</th><th>Action</th></tr></thead>
+        <tbody id="bans-body"><tr><td colspan="4" class="loading">Loading...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'show ' + type;
+    setTimeout(() => t.className = '', 2500);
+  }
+
+  async function apiFetch(url, options = {}) {
+    const res = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', ...(options.headers || {}) } });
+    return res.json();
+  }
+
+  async function loadStats() {
+    try {
+      const d = await apiFetch('/admin/api/stats');
+      document.getElementById('s-online').textContent = d.onlineNow ?? '0';
+      document.getElementById('s-reports').textContent = d.totalReports ?? '0';
+      document.getElementById('s-recent').textContent = d.reportsLast24h ?? '0';
+      document.getElementById('s-bans').textContent = d.totalBans ?? '0';
+    } catch (e) {}
+  }
+
+  async function loadReports() {
+    const tbody = document.getElementById('reports-body');
+    try {
+      const rows = await apiFetch('/admin/api/reports');
+      if (!rows.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty">No reports yet</td></tr>'; return; }
+      tbody.innerHTML = rows.map(r => {
+        const count = parseInt(r.count);
+        const badgeClass = count >= 3 ? '' : count >= 2 ? 'yellow' : 'green';
+        const date = new Date(r.last_report).toLocaleString();
+        return `<tr>
+          <td><span class="ip">${r.reported_ip}</span></td>
+          <td><span class="count-badge ${badgeClass}">${count}</span></td>
+          <td>${date}</td>
+          <td><button class="btn btn-ban" onclick="banIP('${r.reported_ip}')"><i class="fa-solid fa-ban"></i> Ban</button></td>
+        </tr>`;
+      }).join('');
+    } catch (e) { tbody.innerHTML = '<tr><td colspan="4" class="empty">Error loading reports</td></tr>'; }
+  }
+
+  async function loadBans() {
+    const tbody = document.getElementById('bans-body');
+    try {
+      const rows = await apiFetch('/admin/api/bans');
+      if (!rows.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty">No banned IPs</td></tr>'; return; }
+      tbody.innerHTML = rows.map(r => {
+        const date = new Date(r.banned_at).toLocaleString();
+        return `<tr>
+          <td><span class="ip">${r.ip}</span></td>
+          <td>${r.reason}</td>
+          <td>${date}</td>
+          <td><button class="btn btn-unban" onclick="unbanIP('${r.ip}')"><i class="fa-solid fa-check"></i> Unban</button></td>
+        </tr>`;
+      }).join('');
+    } catch (e) { tbody.innerHTML = '<tr><td colspan="4" class="empty">Error loading bans</td></tr>'; }
+  }
+
+  async function banIP(ip) {
+    if (!confirm(`Ban IP: ${ip}?`)) return;
+    const reason = prompt('Reason (optional):', 'Inappropriate behavior') || 'Inappropriate behavior';
+    try {
+      await apiFetch('/admin/api/ban', { method: 'POST', body: JSON.stringify({ ip, reason }) });
+      showToast(`✅ ${ip} banned`, 'success');
+      loadAll();
+    } catch (e) { showToast('Error banning IP', 'error'); }
+  }
+
+  async function unbanIP(ip) {
+    if (!confirm(`Unban IP: ${ip}?`)) return;
+    try {
+      await apiFetch('/admin/api/unban', { method: 'POST', body: JSON.stringify({ ip }) });
+      showToast(`✅ ${ip} unbanned`, 'success');
+      loadAll();
+    } catch (e) { showToast('Error unbanning IP', 'error'); }
+  }
+
+  function loadAll() {
+    loadStats();
+    loadReports();
+    loadBans();
+  }
+
+  loadAll();
+  setInterval(loadStats, 10000); // Refresh stats toutes les 10s
+</script>
+</body>
+</html>

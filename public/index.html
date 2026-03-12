@@ -231,6 +231,14 @@
     }
     .btn-stop:hover { border-color: var(--danger); color: var(--danger); }
 
+    .btn-report {
+      background: transparent; border: 1px solid var(--danger); color: var(--danger);
+      padding: 7px 14px; font-size: 0.75rem; font-family: 'DM Mono', monospace;
+      border-radius: 2px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-report:hover { background: var(--danger); color: #fff; }
+
+
     /* Messages */
     #messages {
       flex: 1; overflow-y: auto; padding: 16px 20px;
@@ -481,6 +489,7 @@
       <div class="chat-actions">
         <button class="btn-next" onclick="nextChat()"><i class="fa-solid fa-forward-step"></i> Next</button>
         <button class="btn-stop" onclick="stopChat()"><i class="fa-solid fa-stop"></i> Stop</button>
+        <button class="btn-report" onclick="reportStranger()" id="btn-report" style="display:none"><i class="fa-solid fa-flag"></i> Report</button>
       </div>
     </div>
     <div class="common-banner" id="common-banner" style="display:none"></div>
@@ -924,6 +933,8 @@ function stopTimer() {
   if (el) el.textContent = '';
 }
 function cleanup() {
+  window.currentStrangerSocketId = null;
+  const rb = document.getElementById('btn-report'); if (rb) rb.style.display = 'none';
   stopMedia();
   stopTimer();
   clearMessages();
@@ -1045,6 +1056,29 @@ function toggleTheme() {
 
 // Appliquer le thème sauvegardé au chargement
 applyTheme(localStorage.getItem('theme') || 'dark');
+
+// ── Report ──
+async function reportStranger() {
+  if (!window.currentStrangerSocketId) return;
+  const reasons = ['Inappropriate behavior', 'Nudity / Sexual content', 'Harassment', 'Spam', 'Underage'];
+  const reason = prompt('Reason for report:\n' + reasons.map((r,i) => `${i+1}. ${r}`).join('\n') + '\n\nType the number or your own reason:', '1');
+  if (!reason) return;
+  const finalReason = reasons[parseInt(reason) - 1] || reason;
+  try {
+    const res = await fetch('/api/report', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ reportedSocketId: window.currentStrangerSocketId, reason: finalReason })
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('btn-report').textContent = '✓ Reported';
+      document.getElementById('btn-report').disabled = true;
+    }
+  } catch (e) {
+    alert('Failed to submit report. Please try again.');
+  }
+}
 </script>
 </body>
 </html>
