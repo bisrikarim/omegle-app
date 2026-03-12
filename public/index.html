@@ -636,7 +636,10 @@ socket.on('waiting_fallback', () => {
   if (el) el.textContent = 'No match found, looking randomly...';
 });
 
-socket.on('matched', async ({ role, common }) => {
+socket.on('matched', async ({ role, common, strangerSocketId }) => {
+  window.currentStrangerSocketId = strangerSocketId;
+  const rb = document.getElementById('btn-report');
+  if (rb) { rb.style.display = 'inline-flex'; rb.disabled = false; rb.innerHTML = '<i class="fa-solid fa-flag"></i> Report'; }
   myRole = role;
   clearMessages();
   // Show/hide common interests banner
