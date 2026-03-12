@@ -33,7 +33,10 @@ async function initDB() {
   `);
   console.log('✅ Database tables ready');
 }
-initDB().catch(err => console.error('DB init error:', err));
+initDB().catch(err => {
+  console.error('❌ DB init error:', err.message);
+  console.error('❌ DB connection string starts with:', process.env.DATABASE_URL ? process.env.DATABASE_URL.substring(0, 30) + '...' : 'NOT SET');
+});
 
 function getIP(req) {
   return (
@@ -149,7 +152,8 @@ app.get('/admin/api/stats', adminAuth, async (req, res) => {
 app.get('/admin/api/reports', adminAuth, async (req, res) => {
   try {
     const result = await pool.query(`
-      SELECT reported_ip, COUNT(*) as count, MAX(created_at) as last_report
+      SELECT reported_ip, COUNT(*) as count, MAX(created_at) as last_report,
+             ARRAY_AGG(DISTINCT reason) as reasons
       FROM reports GROUP BY reported_ip ORDER BY count DESC, last_report DESC
     `);
     res.json(result.rows);

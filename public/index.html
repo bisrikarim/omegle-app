@@ -587,6 +587,17 @@ function selectMode(mode) {
 // ═══════════════════════════════════════════
 //  STATS
 // ═══════════════════════════════════════════
+// ── Banned ──
+socket.on('banned', () => {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const bannedDiv = document.createElement('div');
+  bannedDiv.id = 'banned-screen';
+  bannedDiv.className = 'screen active';
+  bannedDiv.style.cssText = 'display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:40px;text-align:center;';
+  bannedDiv.innerHTML = '<div style="font-size:3rem;">🚫</div><div style="font-family:Syne,sans-serif;font-size:1.4rem;font-weight:800;color:var(--danger);">You have been banned</div><div style="font-size:0.82rem;color:var(--muted);max-width:320px;line-height:1.6;">Your IP address has been banned for violating our terms of service.</div>';
+  document.getElementById('app').appendChild(bannedDiv);
+});
+
 socket.on('stats', ({ online, chatting }) => {
   document.getElementById('stat-online').textContent  = online;
   document.getElementById('stat-chatting').textContent = chatting;
