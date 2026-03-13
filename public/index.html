@@ -479,18 +479,18 @@
         <div class="p2p-badge">peer-to-peer · encrypted</div>
       </div>
       <!-- Device picker panel (desktop only) -->
-      <div id="device-panel" style="display:none; padding:10px 12px; background:var(--surface); border-top:1px solid var(--border); gap:8px; flex-direction:column;">
+      <div id="device-panel" style="display:none; padding:10px 12px; background:var(--surface); border-top:1px solid var(--border); gap:8px; flex-direction:column; overflow:hidden;">
         <div style="display:flex; gap:8px; align-items:center;">
           <label style="color:var(--muted);font-size:0.72rem;width:80px;flex-shrink:0;"><i class="fa-solid fa-video"></i> Camera</label>
-          <select id="select-cam" style="flex:1;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:0.72rem;font-family:inherit;"></select>
+          <select id="select-cam" style="flex:1;min-width:0;max-width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:0.72rem;font-family:inherit;overflow:hidden;text-overflow:ellipsis;"></select>
         </div>
         <div style="display:flex; gap:8px; align-items:center;">
           <label style="color:var(--muted);font-size:0.72rem;width:80px;flex-shrink:0;"><i class="fa-solid fa-microphone"></i> Micro</label>
-          <select id="select-mic" style="flex:1;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:0.72rem;font-family:inherit;"></select>
+          <select id="select-mic" style="flex:1;min-width:0;max-width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:0.72rem;font-family:inherit;overflow:hidden;text-overflow:ellipsis;"></select>
         </div>
         <div id="speaker-row" style="display:flex; gap:8px; align-items:center;">
           <label style="color:var(--muted);font-size:0.72rem;width:80px;flex-shrink:0;">🔊 Speaker</label>
-          <select id="select-speaker" style="flex:1;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:0.72rem;font-family:inherit;"></select>
+          <select id="select-speaker" style="flex:1;min-width:0;max-width:100%;background:var(--bg);color:var(--text);border:1px solid var(--border);border-radius:4px;padding:4px 6px;font-size:0.72rem;font-family:inherit;overflow:hidden;text-overflow:ellipsis;"></select>
         </div>
         <button onclick="applyDevices()" style="align-self:flex-end;background:var(--accent);color:#fff;border:none;border-radius:4px;padding:5px 14px;font-size:0.72rem;font-family:inherit;cursor:pointer;">Apply</button>
       </div>
