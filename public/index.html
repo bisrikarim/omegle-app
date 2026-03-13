@@ -772,9 +772,9 @@ function sendMessage() {
 const msgInput = document.getElementById('msg-input');
 msgInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
 msgInput.addEventListener('input', () => {
-  if (!isTyping) { isTyping = true; socket.emit('typing', true); }
-  clearTimeout(typingTimer);
-  typingTimer = setTimeout(() => { isTyping = false; socket.emit('typing', false); }, 1500);
+  const hasText = msgInput.value.length > 0;
+  if (hasText && !isTyping) { isTyping = true; socket.emit('typing', true); }
+  if (!hasText && isTyping) { isTyping = false; socket.emit('typing', false); }
 });
 
 // ═══════════════════════════════════════════
