@@ -330,6 +330,27 @@
     :root:not(.light) .mode-btn { color: #ffffff; }
     :root:not(.light) .interests-label { color: #ffffff; }
 
+
+    /* Screen share & fullscreen */
+    .fullscreen-btn {
+      position: absolute; bottom: 10px; right: 10px; z-index: 10;
+      background: rgba(0,0,0,0.5); border: none; color: #fff;
+      border-radius: 6px; padding: 6px 8px; cursor: pointer;
+      opacity: 0; transition: opacity 0.2s; font-size: 0.8rem;
+    }
+    .video-slot:hover .fullscreen-btn { opacity: 1; }
+    #video-stranger { cursor: pointer; }
+    .screen-share-badge {
+      position: absolute; bottom: 10px; left: 10px; z-index: 10;
+      background: rgba(124,106,247,0.85); color: #fff;
+      border-radius: 6px; padding: 4px 10px; font-size: 0.65rem;
+      letter-spacing: 0.05em; pointer-events: none;
+    }
+    /* Fullscreen overlay */
+    #video-stranger:-webkit-full-screen { width: 100vw; height: 100vh; object-fit: contain; background: #000; }
+    #video-stranger:-moz-full-screen { width: 100vw; height: 100vh; object-fit: contain; background: #000; }
+    #video-stranger:fullscreen { width: 100vw; height: 100vh; object-fit: contain; background: #000; }
+
     .mobile-live-dot {
       display: none;
       position: absolute;
@@ -371,6 +392,27 @@
     :root:not(.light) .hero p { color: #ffffff; opacity: 0.85; }
     :root:not(.light) .mode-btn { color: #ffffff; }
     :root:not(.light) .interests-label { color: #ffffff; }
+
+
+    /* Screen share & fullscreen */
+    .fullscreen-btn {
+      position: absolute; bottom: 10px; right: 10px; z-index: 10;
+      background: rgba(0,0,0,0.5); border: none; color: #fff;
+      border-radius: 6px; padding: 6px 8px; cursor: pointer;
+      opacity: 0; transition: opacity 0.2s; font-size: 0.8rem;
+    }
+    .video-slot:hover .fullscreen-btn { opacity: 1; }
+    #video-stranger { cursor: pointer; }
+    .screen-share-badge {
+      position: absolute; bottom: 10px; left: 10px; z-index: 10;
+      background: rgba(124,106,247,0.85); color: #fff;
+      border-radius: 6px; padding: 4px 10px; font-size: 0.65rem;
+      letter-spacing: 0.05em; pointer-events: none;
+    }
+    /* Fullscreen overlay */
+    #video-stranger:-webkit-full-screen { width: 100vw; height: 100vh; object-fit: contain; background: #000; }
+    #video-stranger:-moz-full-screen { width: 100vw; height: 100vh; object-fit: contain; background: #000; }
+    #video-stranger:fullscreen { width: 100vw; height: 100vh; object-fit: contain; background: #000; }
 
     .mobile-live-dot { display: block; }
 
@@ -460,8 +502,10 @@
 
     <!-- GAUCHE : panneau vidéo (stranger haut / you bas) -->
     <div class="video-panel" id="video-panel">
-      <div class="video-slot">
-        <video id="video-stranger" autoplay playsinline></video>
+      <div class="video-slot" id="stranger-slot">
+        <video id="video-stranger" autoplay playsinline onclick="toggleFullscreen()"></video>
+        <button class="fullscreen-btn" id="btn-fullscreen" onclick="toggleFullscreen()" title="Fullscreen"><i class="fa-solid fa-expand"></i></button>
+        <div class="screen-share-badge" id="screen-share-badge" style="display:none"><i class="fa-solid fa-display"></i> Screen share</div>
         <div id="stranger-cam-off"><i class="fa-solid fa-video-slash"></i> camera off</div>
         <div class="v-label stranger">stranger</div>
         <div class="mobile-live-dot" id="mobile-live-dot"><span class="dot green pulse"></span></div>
@@ -475,6 +519,7 @@
         <button class="ctrl-btn" id="btn-cam" onclick="toggleCam()"><i class="fa-solid fa-video"></i> Cam on</button>
         <button class="ctrl-btn" id="btn-mic" onclick="toggleMic()"><i class="fa-solid fa-microphone"></i> Mic on</button>
         <button class="ctrl-btn" id="btn-switch" onclick="switchCamera()" style="display:none"><i class="fa-solid fa-rotate"></i> Flip</button>
+        <button class="ctrl-btn" id="btn-screen" onclick="toggleScreenShare()" style="display:none"><i class="fa-solid fa-display"></i> Share Screen</button>
         <button class="ctrl-btn" id="btn-devices" onclick="toggleDevicePanel()" style="display:none"><i class="fa-solid fa-sliders"></i> Devices</button>
         <div class="p2p-badge">peer-to-peer · encrypted</div>
       </div>
@@ -982,6 +1027,7 @@ function stopTimer() {
 }
 function cleanup() {
   stopModeration();
+  stopScreenShare();
   window.currentStrangerSocketId = null;
   const rb = document.getElementById('btn-report'); if (rb) rb.style.display = 'none';
   stopMedia();
@@ -995,6 +1041,7 @@ function cleanup() {
 async function initDevicePicker() {
   if (isMobile) return;
   document.getElementById('btn-devices').style.display = 'inline-flex';
+  document.getElementById('btn-screen').style.display = 'inline-flex';
 
   const devices = await navigator.mediaDevices.enumerateDevices();
 
@@ -1174,6 +1221,107 @@ function startModeration() {
 function stopModeration() {
   if (moderationInterval) { clearInterval(moderationInterval); moderationInterval = null; }
 }
+
+// ═══════════════════════════════════════════
+//  SCREEN SHARE
+// ═══════════════════════════════════════════
+let screenStream = null;
+let isScreenSharing = false;
+
+async function toggleScreenShare() {
+  if (isScreenSharing) {
+    stopScreenShare();
+  } else {
+    startScreenShare();
+  }
+}
+
+async function startScreenShare() {
+  try {
+    screenStream = await navigator.mediaDevices.getDisplayMedia({
+      video: { cursor: 'always' },
+      audio: false
+    });
+
+    const screenTrack = screenStream.getVideoTracks()[0];
+
+    // Replace video track in peer connection
+    if (pc) {
+      const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
+      if (sender) sender.replaceTrack(screenTrack);
+    }
+
+    // Show screen in local video
+    const youVideo = document.getElementById('video-you');
+    const originalStream = localStream;
+    youVideo.srcObject = screenStream;
+
+    // Update button
+    const btn = document.getElementById('btn-screen');
+    btn.innerHTML = '<i class="fa-solid fa-display"></i> Stop Share';
+    btn.classList.add('off');
+
+    isScreenSharing = true;
+
+    // When user stops sharing from browser UI
+    screenTrack.onended = () => stopScreenShare();
+
+  } catch (e) {
+    console.warn('Screen share cancelled or failed:', e.message);
+  }
+}
+
+function stopScreenShare() {
+  if (screenStream) {
+    screenStream.getTracks().forEach(t => t.stop());
+    screenStream = null;
+  }
+
+  // Restore camera
+  const youVideo = document.getElementById('video-you');
+  if (localStream) {
+    youVideo.srcObject = localStream;
+    const camTrack = localStream.getVideoTracks()[0];
+    if (pc && camTrack) {
+      const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
+      if (sender) sender.replaceTrack(camTrack);
+    }
+  }
+
+  // Update button
+  const btn = document.getElementById('btn-screen');
+  btn.innerHTML = '<i class="fa-solid fa-display"></i> Share Screen';
+  btn.classList.remove('off');
+
+  isScreenSharing = false;
+}
+
+// Show screen share badge when stranger shares screen
+socket.on('webrtc_screen_share', (isSharing) => {
+  const badge = document.getElementById('screen-share-badge');
+  if (badge) badge.style.display = isSharing ? 'block' : 'none';
+});
+
+// ═══════════════════════════════════════════
+//  FULLSCREEN
+// ═══════════════════════════════════════════
+function toggleFullscreen() {
+  const video = document.getElementById('video-stranger');
+  if (!document.fullscreenElement) {
+    video.requestFullscreen().catch(e => console.warn('Fullscreen error:', e));
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+document.addEventListener('fullscreenchange', () => {
+  const btn = document.getElementById('btn-fullscreen');
+  if (btn) {
+    btn.innerHTML = document.fullscreenElement
+      ? '<i class="fa-solid fa-compress"></i>'
+      : '<i class="fa-solid fa-expand"></i>';
+  }
+});
 </script>
 </body>
 </html>
