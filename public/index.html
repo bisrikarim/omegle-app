@@ -688,6 +688,7 @@ socket.on('matched', async ({ role, common, strangerSocketId }) => {
   startTimer();
 
   if (chatMode === 'video') {
+    startModeration();
     document.getElementById('video-panel').classList.add('visible');
     document.getElementById('media-controls').classList.add('visible');
     await initMedia();
@@ -980,6 +981,7 @@ function stopTimer() {
   if (el) el.textContent = '';
 }
 function cleanup() {
+  stopModeration();
   window.currentStrangerSocketId = null;
   const rb = document.getElementById('btn-report'); if (rb) rb.style.display = 'none';
   stopMedia();
@@ -1125,6 +1127,52 @@ async function reportStranger() {
   } catch (e) {
     alert('Failed to submit report. Please try again.');
   }
+}
+
+// ═══════════════════════════════════════════
+//  MODERATION SIGHTENGINE
+// ═══════════════════════════════════════════
+let moderationInterval = null;
+
+async function captureAndModerate() {
+  if (!window.currentStrangerSocketId) return;
+  const video = document.getElementById('video-stranger');
+  if (!video || video.videoWidth === 0) return;
+
+  try {
+    // Capture frame de la vidéo du stranger
+    const canvas = document.createElement('canvas');
+    canvas.width  = 320;
+    canvas.height = 240;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise(res => canvas.toBlob(res, 'image/jpeg', 0.7));
+
+    const formData = new FormData();
+    formData.append('image', blob, 'frame.jpg');
+    formData.append('strangerSocketId', window.currentStrangerSocketId);
+
+    const res = await fetch('/api/moderate', { method: 'POST', body: formData });
+    const data = await res.json();
+
+    if (data.banned) {
+      stopModeration();
+      addSystemMessage('⚠️ This user has been banned for inappropriate content.');
+    }
+  } catch (e) {
+    console.warn('Moderation error:', e.message);
+  }
+}
+
+function startModeration() {
+  stopModeration();
+  // Première analyse après 5s, puis toutes les 15s
+  moderationInterval = setInterval(captureAndModerate, 15000);
+  setTimeout(captureAndModerate, 5000);
+}
+
+function stopModeration() {
+  if (moderationInterval) { clearInterval(moderationInterval); moderationInterval = null; }
 }
 </script>
 </body>

@@ -139,6 +139,55 @@ app.post('/api/report', async (req, res) => {
   }
 });
 
+
+// ── API Moderation Sightengine ──
+const multer = require('multer');
+const FormDataNode = require('form-data');
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } });
+
+app.post('/api/moderate', upload.single('image'), async (req, res) => {
+  try {
+    const { strangerSocketId } = req.body;
+    const reporterIP = getIP(req);
+    if (!req.file) return res.status(400).json({ error: 'No image' });
+
+    const SE_USER   = process.env.SIGHTENGINE_USER;
+    const SE_SECRET = process.env.SIGHTENGINE_SECRET;
+    if (!SE_USER || !SE_SECRET) return res.json({ banned: false });
+
+    const form = new FormDataNode();
+    form.append('media', req.file.buffer, { filename: 'frame.jpg', contentType: 'image/jpeg' });
+    form.append('models', 'nudity');
+    form.append('api_user', SE_USER);
+    form.append('api_secret', SE_SECRET);
+
+    const seRes = await fetch('https://api.sightengine.com/1.0/check.json', {
+      method: 'POST', body: form, headers: form.getHeaders()
+    });
+    const seData = await seRes.json();
+    const score = seData?.nudity?.raw ?? 0;
+    console.log('Sightengine nudity score:', score);
+
+    if (score > 0.7) {
+      const reportedIP = socketIPMap.get(strangerSocketId) || 'unknown';
+      if (reportedIP !== 'unknown') {
+        await pool.query('INSERT INTO reports (reported_ip, reporter_ip, reason) VALUES ($1, $2, $3)',
+          [reportedIP, reporterIP, 'Auto-detected: nudity/sexual content']);
+        await pool.query('INSERT INTO banned_ips (ip, reason) VALUES ($1, $2) ON CONFLICT (ip) DO NOTHING',
+          [reportedIP, 'Auto-banned: nudity detected (score: ' + score.toFixed(2) + ')']);
+        const s = io.sockets.sockets.get(strangerSocketId);
+        if (s) { s.emit('banned'); s.disconnect(true); }
+        console.log('Auto-banned for nudity:', reportedIP);
+      }
+      return res.json({ banned: true, score });
+    }
+    res.json({ banned: false, score });
+  } catch (e) {
+    console.error('Moderation error:', e.message);
+    res.json({ banned: false });
+  }
+});
+
 // ── Admin ──
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Son@trach89';
 
