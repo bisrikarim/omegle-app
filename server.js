@@ -158,7 +158,7 @@ app.post('/api/moderate', upload.single('image'), async (req, res) => {
 
     const form = new FormDataNode();
     form.append('media', req.file.buffer, { filename: 'frame.jpg', contentType: 'image/jpeg' });
-    form.append('models', 'nudity');
+    form.append('models', 'nudity-2.0');
     form.append('api_user', SE_USER);
     form.append('api_secret', SE_SECRET);
 
@@ -166,8 +166,8 @@ app.post('/api/moderate', upload.single('image'), async (req, res) => {
       method: 'POST', body: form, headers: form.getHeaders()
     });
     const seData = await seRes.json();
-    const score = seData?.nudity?.raw ?? 0;
-    console.log('Sightengine nudity score:', score);
+    const score = seData?.nudity?.raw ?? seData?.nudity?.none ?? 0;
+    console.log('Sightengine nudity-2.0 score:', score, JSON.stringify(seData?.nudity));
 
     if (score > 0.7) {
       const reportedIP = socketIPMap.get(strangerSocketId) || 'unknown';
