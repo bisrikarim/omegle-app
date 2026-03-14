@@ -213,50 +213,57 @@
     .ctrl-btn.off { background: rgba(248,113,113,0.08); border-color: rgba(248,113,113,0.5); color: var(--danger); }
     .p2p-badge { width: 100%; text-align: center; font-size: 0.58rem; color: var(--muted); opacity: 0.3; padding-bottom: 2px; letter-spacing: 0.06em; }
 
-    /* ── Device panel — redesigned ── */
-    #device-panel { display: none; }
+    /* ── Device panel — adaptive dark/light ── */
+    #device-panel {
+      display: none;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      flex-direction: column;
+      overflow: hidden;
+    }
     #device-panel.open { display: flex !important; }
 
     .device-row {
-      display: flex; align-items: center; min-height: 52px;
-      padding: 0 16px; border-bottom: 1px solid #1a1a2e;
+      display: flex; align-items: center; min-height: 50px;
+      padding: 0 14px; gap: 10px;
+      border-bottom: 1px solid var(--border);
       transition: background 0.15s;
     }
     .device-row:last-of-type { border-bottom: none; }
-    .device-row:hover { background: rgba(124,106,247,0.04); }
+    .device-row:hover { background: var(--accent-dim); }
 
     .device-icon {
       display: flex; align-items: center; justify-content: center;
-      width: 32px; flex-shrink: 0; color: #5a5a7a; font-size: 0.82rem;
+      width: 20px; flex-shrink: 0; color: var(--muted); font-size: 0.78rem;
     }
     .device-label {
-      font-size: 0.62rem; color: #5a5a7a; text-transform: uppercase;
-      letter-spacing: 0.1em; width: 70px; flex-shrink: 0;
+      font-size: 0.62rem; color: var(--muted); text-transform: uppercase;
+      letter-spacing: 0.09em; width: 62px; flex-shrink: 0;
     }
-    .device-select-wrap { flex: 1; position: relative; min-width: 0; }
-    .device-select-wrap::after {
-      content: ''; position: absolute; right: 10px; top: 50%;
-      transform: translateY(-50%); pointer-events: none;
-      border-left: 4px solid transparent; border-right: 4px solid transparent;
-      border-top: 5px solid #5a5a7a;
-    }
+    .device-select-wrap { flex: 1; min-width: 0; }
     .device-select {
-      width: 100%; background: transparent; border: none;
-      color: #c8c8e8; font-family: 'DM Mono', monospace; font-size: 0.75rem;
-      padding: 0 28px 0 10px; height: 52px; cursor: pointer; outline: none;
-      appearance: none; -webkit-appearance: none;
-      text-overflow: ellipsis; white-space: nowrap; overflow: hidden;
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border-light);
+      color: var(--text);
+      font-family: 'DM Mono', monospace; font-size: 0.74rem;
+      padding: 6px 10px; height: 34px;
+      cursor: pointer; outline: none; border-radius: 4px;
+      text-overflow: ellipsis;
+      transition: border-color 0.2s;
     }
-    .device-select option { background: #111120; color: #c8c8e8; }
-    .device-select:focus { color: #a89fff; }
+    .device-select:hover { border-color: var(--accent); }
+    .device-select:focus { border-color: var(--accent); outline: none; }
+
     .device-apply-row {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 12px 16px; background: #0e0e1c; border-top: 1px solid #1e1e32;
+      display: flex; align-items: center; justify-content: flex-end;
+      padding: 10px 14px; gap: 10px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
     }
-    .device-p2p { font-size: 0.58rem; color: #3a3a5a; letter-spacing: 0.06em; text-transform: uppercase; }
     .btn-apply-devices {
       background: var(--accent); border: none; color: #fff;
-      border-radius: 6px; padding: 8px 20px;
+      border-radius: 6px; padding: 7px 20px;
       font-family: 'DM Mono', monospace; font-size: 0.72rem;
       cursor: pointer; font-weight: 600; letter-spacing: 0.04em;
       transition: all 0.18s;
@@ -391,16 +398,7 @@
     :root:not(.light) .mode-btn { color: #ffffff; }
     :root:not(.light) .interests-label { color: #ffffff; }
 
-    /* Light mode device panel */
-    :root.light .device-row { border-bottom-color: var(--border); }
-    :root.light .device-row:hover { background: rgba(124,106,247,0.04); }
-    :root.light .device-icon { color: var(--muted); }
-    :root.light .device-label { color: var(--muted); }
-    :root.light .device-select { color: var(--text); }
-    :root.light .device-select-wrap::after { border-top-color: var(--muted); }
-    :root.light #device-panel { background: var(--surface); border-top-color: var(--border); }
-    :root.light .device-apply-row { background: var(--bg); border-top-color: var(--border); }
-    :root.light .device-p2p { color: var(--muted); opacity: 0.5; }
+    /* Light mode ctrl-btn overrides */
     :root.light .ctrl-btn { background: var(--surface); border-color: var(--border-light); color: var(--muted); }
     :root.light .ctrl-btn:hover { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
     :root.light .ctrl-btn.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
@@ -520,7 +518,7 @@
       </div>
 
       <!-- Device panel -->
-      <div id="device-panel" style="background:#111120;border-top:1px solid #1e1e32;flex-direction:column;overflow:hidden;">
+      <div id="device-panel">
 
         <div class="device-row">
           <div class="device-icon"><i class="fa-solid fa-video"></i></div>
@@ -547,7 +545,6 @@
         </div>
 
         <div class="device-apply-row">
-          <span class="device-p2p">peer-to-peer · encrypted</span>
           <button class="btn-apply-devices" onclick="applyDevices()">Apply</button>
         </div>
       </div>
