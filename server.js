@@ -143,7 +143,6 @@ app.post('/api/report', async (req, res) => {
 
 // ── API Moderation Sightengine ──
 const multer = require('multer');
-const FormDataNode = require('form-data');
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } });
 
 app.post('/api/moderate', upload.single('image'), async (req, res) => {
@@ -156,14 +155,20 @@ app.post('/api/moderate', upload.single('image'), async (req, res) => {
     const SE_SECRET = process.env.SIGHTENGINE_SECRET;
     if (!SE_USER || !SE_SECRET) return res.json({ banned: false });
 
-    const form = new FormDataNode();
-    form.append('media', req.file.buffer, { filename: 'frame.jpg', contentType: 'image/jpeg' });
-    form.append('models', 'nudity');
-    form.append('api_user', SE_USER);
-    form.append('api_secret', SE_SECRET);
+    // Convert buffer to base64
+    const base64 = req.file.buffer.toString('base64');
+    const dataUri = 'data:image/jpeg;base64,' + base64;
+
+    const params = new URLSearchParams();
+    params.append('url', dataUri);
+    params.append('models', 'nudity');
+    params.append('api_user', SE_USER);
+    params.append('api_secret', SE_SECRET);
 
     const seRes = await fetch('https://api.sightengine.com/1.0/check.json', {
-      method: 'POST', body: form, headers: form.getHeaders()
+      method: 'POST',
+      body: params,
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
     });
     const seData = await seRes.json();
     const nudity = seData?.nudity || {};
