@@ -5,6 +5,7 @@ const { Pool }   = require('pg');
 const rateLimit  = require('express-rate-limit');
 
 const app = express();
+app.set('trust proxy', 1); // Railway sits behind a proxy
 app.use(express.json());
 
 // Rate Limiting general: 100 req / 15min par IP
