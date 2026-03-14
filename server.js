@@ -155,20 +155,38 @@ app.post('/api/moderate', upload.single('image'), async (req, res) => {
     const SE_SECRET = process.env.SIGHTENGINE_SECRET;
     if (!SE_USER || !SE_SECRET) return res.json({ banned: false });
 
-    // Convert buffer to base64
-    const base64 = req.file.buffer.toString('base64');
-    const dataUri = 'data:image/jpeg;base64,' + base64;
+    // Upload image as multipart using node-fetch compatible approach
+    const boundary = '----FormBoundary' + Math.random().toString(36).slice(2);
+    const CRLF = '\r\n';
+    const bodyParts = [];
 
-    const params = new URLSearchParams();
-    params.append('url', dataUri);
-    params.append('models', 'nudity');
-    params.append('api_user', SE_USER);
-    params.append('api_secret', SE_SECRET);
+    const addField = (name, value) => {
+      bodyParts.push(
+        Buffer.from('--' + boundary + CRLF +
+          'Content-Disposition: form-data; name="' + name + '"' + CRLF + CRLF +
+          value + CRLF)
+      );
+    };
+
+    addField('models', 'nudity');
+    addField('api_user', SE_USER);
+    addField('api_secret', SE_SECRET);
+
+    // Add file part
+    bodyParts.push(
+      Buffer.from('--' + boundary + CRLF +
+        'Content-Disposition: form-data; name="media"; filename="frame.jpg"' + CRLF +
+        'Content-Type: image/jpeg' + CRLF + CRLF)
+    );
+    bodyParts.push(req.file.buffer);
+    bodyParts.push(Buffer.from(CRLF + '--' + boundary + '--' + CRLF));
+
+    const bodyBuffer = Buffer.concat(bodyParts);
 
     const seRes = await fetch('https://api.sightengine.com/1.0/check.json', {
       method: 'POST',
-      body: params,
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
+      body: bodyBuffer,
+      headers: { 'Content-Type': 'multipart/form-data; boundary=' + boundary }
     });
     const seData = await seRes.json();
     const nudity = seData?.nudity || {};
