@@ -168,7 +168,7 @@ app.post('/api/moderate', upload.single('image'), async (req, res) => {
     const seData = await seRes.json();
     const nudity = seData?.nudity || {};
     const score = Math.max(nudity.sexual_activity ?? 0, nudity.sexual_display ?? 0, nudity.raw ?? 0);
-    console.log('Sightengine nudity:', JSON.stringify(seData?.nudity), '| score:', score);
+    console.log('Sightengine FULL:', JSON.stringify(seData));
 
     if (score > 0.7) {
       const reportedIP = socketIPMap.get(strangerSocketId) || 'unknown';
