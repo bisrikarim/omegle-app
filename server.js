@@ -190,10 +190,11 @@ app.post('/api/moderate', upload.single('image'), async (req, res) => {
     });
     const seData = await seRes.json();
     const nudity = seData?.nudity || {};
-    const score = Math.max(nudity.sexual_activity ?? 0, nudity.sexual_display ?? 0, nudity.raw ?? 0);
-    console.log('Sightengine FULL:', JSON.stringify(seData));
+    const score = nudity.raw ?? 0;
+    const partialScore = nudity.partial ?? 0;
+    console.log('Sightengine scores — raw:', score.toFixed(2), '| partial:', partialScore.toFixed(2), '| tag:', nudity.partial_tag || 'none');
 
-    if (score > 0.7) {
+    if (score > 0.5 || partialScore > 0.55) {
       const reportedIP = socketIPMap.get(strangerSocketId) || 'unknown';
       if (reportedIP !== 'unknown') {
         await pool.query('INSERT INTO reports (reported_ip, reporter_ip, reason) VALUES ($1, $2, $3)',
