@@ -173,17 +173,20 @@
       transition: all 0.18s ease; position: relative;
       -webkit-tap-highlight-color: transparent;
     }
-    .room-btn svg { width: 20px; height: 20px; transition: transform 0.18s ease; color: var(--muted); }
-    /* SVG shapes — use currentColor so they follow button color */
-    .room-btn svg path   { fill: currentColor; stroke: none; transition: fill 0.18s; }
-    .room-btn svg rect   { fill: currentColor; transition: fill 0.18s; }
-    .room-btn svg circle { fill: currentColor; transition: fill 0.18s; }
-    .room-btn svg ellipse{ fill: currentColor; transition: fill 0.18s; }
-    .room-btn svg polygon{ fill: currentColor; transition: fill 0.18s; }
-    /* Stroke-only shapes (lines, open paths with fill=none/currentColor) */
-    .room-btn svg path[fill="none"] { fill: none !important; stroke: currentColor; transition: stroke 0.18s; }
+    .room-btn svg {
+      width: 20px; height: 20px;
+      transition: transform 0.18s ease;
+      /* All stroke & fill colors in SVG use currentColor — inherited from .room-btn color */
+      color: var(--muted);
+    }
+    /* stroke-based icons (fill="none" on paths) */
+    .room-btn svg path   { stroke: currentColor; fill: none; transition: stroke 0.18s; }
+    .room-btn svg rect   { stroke: currentColor; fill: none; transition: stroke 0.18s; }
+    .room-btn svg circle { stroke: currentColor; fill: none; transition: stroke 0.18s; }
     .room-btn svg line   { stroke: currentColor; fill: none; transition: stroke 0.18s; }
     .room-btn svg polyline { stroke: currentColor; fill: none; transition: stroke 0.18s; }
+    /* Small filled circles (buttons on gamepad) keep their fill */
+    .room-btn svg circle[r="1"] { fill: currentColor; stroke: none; }
     .room-btn:hover {
       border-color: var(--accent); color: var(--accent);
       background: var(--accent-dim); transform: translateY(-1px);
@@ -623,61 +626,61 @@
 
         <button class="room-btn" data-room="gaming" onclick="selectRoom('gaming', this)">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="2" y="6" width="20" height="12" rx="4" stroke="currentColor" stroke-width="1.8" fill="none"/>
-            <path d="M7 12h4M9 10v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            <circle cx="15.5" cy="11" r="1" fill="currentColor"/>
-            <circle cx="17.5" cy="13" r="1" fill="currentColor"/>
+            <rect x="2" y="6" width="20" height="12" rx="4" stroke-width="1.8"/>
+            <path d="M7 12h4M9 10v4" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="15.5" cy="11" r="1"/>
+            <circle cx="17.5" cy="13" r="1"/>
           </svg>
           Gaming
         </button>
 
         <button class="room-btn" data-room="music" onclick="selectRoom('music', this)">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M9 18V5l12-2v13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="6" cy="18" r="3" fill="currentColor"/>
-            <circle cx="18" cy="16" r="3" fill="currentColor"/>
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 18V5l12-2v13" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="6" cy="18" r="3" stroke-width="1.8"/>
+            <circle cx="18" cy="16" r="3" stroke-width="1.8"/>
           </svg>
           Music
         </button>
 
         <button class="room-btn" data-room="coding" onclick="selectRoom('coding', this)">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M8 9l-4 3 4 3M16 9l4 3-4 3M14 4l-4 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 9l-4 3 4 3M16 9l4 3-4 3M14 4l-4 16" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           Coding
         </button>
 
         <button class="room-btn" data-room="movies" onclick="selectRoom('movies', this)">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="2" y="7" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
-            <path d="M2 11h20" stroke="currentColor" stroke-width="1.8"/>
-            <path d="M7 7V3M17 7V3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M2 7l5-4M9 7l5-4M16 7l5-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <rect x="2" y="7" width="20" height="14" rx="2" stroke-width="1.8"/>
+            <path d="M2 11h20" stroke-width="1.8"/>
+            <path d="M7 7V3M17 7V3" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M2 7l5-4M9 7l5-4M16 7l5-4" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
           Movies
         </button>
 
         <button class="room-btn" data-room="languages" onclick="selectRoom('languages', this)">
           <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
-            <path d="M8 9h8M8 13h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8" stroke-linejoin="round"/>
+            <path d="M8 9h8M8 13h5" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
           Languages
         </button>
 
         <button class="room-btn" data-room="vibing" onclick="selectRoom('vibing', this)">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke="currentColor" stroke-width="2" fill="none"/>
-            <path d="M8 13s1.5 2 4 2 4-2 4-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
-            <path d="M9 9h.01M15 9h.01" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke-width="1.8"/>
+            <path d="M8 13s1.5 2 4 2 4-2 4-2" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M9 9h.01M15 9h.01" stroke-width="2.5" stroke-linecap="round"/>
           </svg>
           Vibing
         </button>
 
         <!-- Random fallback row -->
         <button class="room-btn room-random selected" id="room-random" data-room="" onclick="selectRoom('', this)">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M16 3h5v5M4 20l16.2-16.2M21 16v5h-5M15 15l5.1 5.1M4 4l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 3h5v5M4 20l16.2-16.2M21 16v5h-5M15 15l5.1 5.1M4 4l5 5" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
           Random — no filter
         </button>
