@@ -146,6 +146,72 @@
     .tag-remove { cursor: pointer; opacity: 0.6; font-size: 0.8rem; line-height: 1; }
     .tag-remove:hover { opacity: 1; color: var(--danger); }
 
+    /* ── Topic Rooms ── */
+    .rooms-wrap {
+      display: flex; flex-direction: column; gap: 10px;
+      align-items: center; width: 100%; max-width: 400px;
+    }
+    .rooms-label {
+      font-size: 0.68rem; color: var(--muted);
+      letter-spacing: 0.06em; text-transform: uppercase;
+      width: 100%; text-align: left;
+    }
+    .rooms-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px; width: 100%;
+    }
+    .room-btn {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 6px; padding: 12px 6px 10px;
+      background: var(--surface); border: 1px solid var(--border-light);
+      color: var(--muted); border-radius: 8px; cursor: pointer;
+      font-family: 'DM Mono', monospace; font-size: 0.6rem;
+      letter-spacing: 0.05em; text-transform: uppercase;
+      transition: all 0.18s ease; position: relative;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .room-btn svg { width: 22px; height: 22px; transition: transform 0.18s ease; color: var(--muted); }
+    /* SVG shapes — use currentColor so they follow button color */
+    .room-btn svg path   { fill: currentColor; stroke: none; transition: fill 0.18s; }
+    .room-btn svg rect   { fill: currentColor; transition: fill 0.18s; }
+    .room-btn svg circle { fill: currentColor; transition: fill 0.18s; }
+    .room-btn svg ellipse{ fill: currentColor; transition: fill 0.18s; }
+    .room-btn svg polygon{ fill: currentColor; transition: fill 0.18s; }
+    /* Stroke-only shapes (lines, open paths with fill=none/currentColor) */
+    .room-btn svg path[fill="none"] { fill: none !important; stroke: currentColor; transition: stroke 0.18s; }
+    .room-btn svg line   { stroke: currentColor; fill: none; transition: stroke 0.18s; }
+    .room-btn svg polyline { stroke: currentColor; fill: none; transition: stroke 0.18s; }
+    .room-btn:hover {
+      border-color: var(--accent); color: var(--accent);
+      background: var(--accent-dim); transform: translateY(-1px);
+    }
+    .room-btn:hover svg { color: var(--accent); transform: scale(1.1); }
+    .room-btn.selected {
+      border-color: var(--accent); background: var(--accent-dim); color: var(--accent);
+    }
+    .room-btn.selected svg { color: var(--accent); }
+    .room-btn.selected::after {
+      content: ''; position: absolute; top: 6px; right: 6px;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent);
+    }
+    .room-random {
+      grid-column: span 3;
+      flex-direction: row; gap: 8px; padding: 10px 16px;
+      justify-content: center;
+    }
+    .room-random svg { width: 16px; height: 16px; }
+
+    /* Room badge in chat status bar */
+    .room-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--accent-dim); border: 1px solid rgba(124,106,247,0.3);
+      color: var(--accent); padding: 2px 9px; border-radius: 2px;
+      font-size: 0.6rem; letter-spacing: 0.06em; text-transform: uppercase;
+    }
+
+    /* Common interests banner */
     /* Common interests banner */
     .common-banner {
       background: rgba(74,222,128,0.07); border: 1px solid rgba(74,222,128,0.2);
@@ -511,6 +577,10 @@
       .hero h1 { font-size: 2rem; }
       .mode-btn { padding: 10px 16px; }
       .btn-start { padding: 12px 36px; }
+      .rooms-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+      .room-btn { padding: 10px 4px 8px; font-size: 0.55rem; min-height: 64px; }
+      .room-btn svg { width: 18px; height: 18px; }
+      .rooms-wrap { max-width: 100%; }
     }
   </style>
 </head>
@@ -542,6 +612,74 @@
       <button class="mode-btn" id="mode-video" onclick="selectMode('video')">
         <i class="fa-solid fa-video"></i> Video + Text
       </button>
+    </div>
+
+    <!-- Topic Rooms -->
+    <div class="rooms-wrap" id="rooms-wrap">
+      <div class="rooms-label">Choose a room <span style="opacity:0.4">(optional)</span></div>
+      <div class="rooms-grid">
+
+        <button class="room-btn" data-room="gaming" onclick="selectRoom('gaming', this)">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="6" width="20" height="12" rx="4"/>
+            <line x1="9" y1="12" x2="9" y2="12" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="7" y1="10" x2="11" y2="10" stroke-width="0"/>
+            <path d="M7 12h4M9 10v4M15 11h.01M17 13h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+          </svg>
+          Gaming
+        </button>
+
+        <button class="room-btn" data-room="music" onclick="selectRoom('music', this)">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 18V5l12-2v13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="6" cy="18" r="3" fill="currentColor"/>
+            <circle cx="18" cy="16" r="3" fill="currentColor"/>
+          </svg>
+          Music
+        </button>
+
+        <button class="room-btn" data-room="coding" onclick="selectRoom('coding', this)">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M8 9l-4 3 4 3M16 9l4 3-4 3M14 4l-4 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          </svg>
+          Coding
+        </button>
+
+        <button class="room-btn" data-room="movies" onclick="selectRoom('movies', this)">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="3" width="20" height="18" rx="3" fill="currentColor" opacity="0.15"/>
+            <rect x="2" y="3" width="20" height="18" rx="3" stroke="currentColor" stroke-width="2" fill="none"/>
+            <path d="M8 5v14M16 5v14M2 9h3M2 15h3M19 9h3M19 15h3" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+          </svg>
+          Movies
+        </button>
+
+        <button class="room-btn" data-room="languages" onclick="selectRoom('languages', this)">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
+            <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="currentColor" stroke-width="2" fill="none"/>
+          </svg>
+          Languages
+        </button>
+
+        <button class="room-btn" data-room="vibing" onclick="selectRoom('vibing', this)">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" stroke="currentColor" stroke-width="2" fill="none"/>
+            <path d="M8 13s1.5 2 4 2 4-2 4-2" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M9 9h.01M15 9h.01" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+          </svg>
+          Vibing
+        </button>
+
+        <!-- Random fallback row -->
+        <button class="room-btn room-random selected" id="room-random" data-room="" onclick="selectRoom('', this)">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 3h5v5M4 20l16.2-16.2M21 16v5h-5M15 15l5.1 5.1M4 4l5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+          </svg>
+          Random — no filter
+        </button>
+
+      </div>
     </div>
 
     <button class="btn-start" onclick="startChat()"><i class="fa-solid fa-arrow-right-long"></i> Start chatting</button>
@@ -693,6 +831,7 @@
         <div class="status-label">
           <span class="dot green pulse"></span>
           Connected to a stranger <span id="chat-timer" style="opacity:0.5; margin-left:6px;"></span>
+          <span class="room-badge" id="room-badge" style="display:none"></span>
         </div>
         <div class="chat-actions">
           <button class="btn-next" onclick="nextChat()"><i class="fa-solid fa-forward-step"></i> Next</button>
@@ -741,6 +880,7 @@ let typingTimer  = null;
 let isTyping     = false;
 let chatMode     = 'text';
 let myRole       = null;
+let selectedRoom = '';  // '' = random
 
 // WebRTC
 let pc            = null;
@@ -798,6 +938,18 @@ function selectMode(mode) {
   document.getElementById('mode-video').classList.toggle('selected', mode === 'video');
 }
 
+function selectRoom(room, el) {
+  selectedRoom = room;
+  // Deselect all room buttons
+  document.querySelectorAll('.room-btn').forEach(b => b.classList.remove('selected'));
+  // Select clicked
+  el.classList.add('selected');
+  // If a specific room selected, deselect "random" visually
+  if (room !== '') {
+    document.getElementById('room-random').classList.remove('selected');
+  }
+}
+
 // ═══════════════════════════════════════════
 //  STATS & BAN
 // ═══════════════════════════════════════════
@@ -849,10 +1001,10 @@ document.getElementById('interests-input').addEventListener('keydown', e => {
 // ═══════════════════════════════════════════
 function startChat() {
   showScreen('waiting-screen');
-  socket.emit('find_partner', { interests: userTags });
+  socket.emit('find_partner', { interests: userTags, room: selectedRoom });
 }
 function cancelSearch() { socket.emit('stop'); goHome(); }
-function nextChat()     { cleanup(); socket.emit('next'); showScreen('waiting-screen'); }
+function nextChat()     { cleanup(); socket.emit('next', { room: selectedRoom }); showScreen('waiting-screen'); }
 function stopChat()     { cleanup(); socket.emit('stop'); goHome(); }
 
 socket.on('waiting',  () => showScreen('waiting-screen'));
@@ -873,6 +1025,15 @@ socket.on('matched', async ({ role, common, strangerSocketId }) => {
     banner.style.display = 'block';
   } else {
     banner.style.display = 'none';
+  }
+  // Show room badge in status bar
+  const roomBadge = document.getElementById('room-badge');
+  const roomLabels = { gaming:'🎮 Gaming', music:'🎵 Music', coding:'💻 Coding', movies:'🎬 Movies', languages:'🌍 Languages', vibing:'🤙 Vibing' };
+  if (selectedRoom && roomLabels[selectedRoom]) {
+    roomBadge.textContent = roomLabels[selectedRoom];
+    roomBadge.style.display = 'inline-flex';
+  } else {
+    roomBadge.style.display = 'none';
   }
   showScreen('chat-screen');
   addSystemMessage('You are now chatting with a stranger. Say hi!');
