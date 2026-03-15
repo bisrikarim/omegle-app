@@ -93,9 +93,11 @@
     #chat-screen.active { flex-direction: row; }
 
     /* HOME */
-    #home-screen { align-items: center; justify-content: center; gap: 28px; padding: 24px; }
+    #home-screen { align-items: center; justify-content: flex-start; gap: 16px; padding: 20px 24px; overflow-y: auto; }
+    #home-screen::-webkit-scrollbar { width: 3px; }
+    #home-screen::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 2px; }
     .hero { text-align: center; max-width: 420px; }
-    .hero h1 { font-family: 'Syne', sans-serif; font-size: clamp(2rem,5vw,3.2rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1.05; margin-bottom: 12px; }
+    .hero h1 { font-family: 'Syne', sans-serif; font-size: clamp(1.6rem,4vw,2.6rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1.05; margin-bottom: 8px; }
     .hero h1 em { font-style: normal; color: var(--accent); }
     .hero p { font-size: 0.8rem; color: var(--muted); line-height: 1.6; }
 
@@ -120,7 +122,7 @@
     .disclaimer { font-size: 0.65rem; color: var(--muted); opacity: 0.5; text-align: center; max-width: 320px; line-height: 1.5; }
 
     /* Interests */
-    .interests-wrap { display: flex; flex-direction: column; gap: 8px; align-items: center; width: 100%; max-width: 360px; }
+    .interests-wrap { display: flex; flex-direction: column; gap: 6px; align-items: center; width: 100%; max-width: 360px; }
     .interests-label { font-size: 0.68rem; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; }
     .interests-input-row { display: flex; gap: 8px; width: 100%; }
     #interests-input {
@@ -148,7 +150,7 @@
 
     /* ── Topic Rooms ── */
     .rooms-wrap {
-      display: flex; flex-direction: column; gap: 10px;
+      display: flex; flex-direction: column; gap: 8px;
       align-items: center; width: 100%; max-width: 400px;
     }
     .rooms-label {
@@ -163,15 +165,15 @@
     }
     .room-btn {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      gap: 6px; padding: 12px 6px 10px;
+      gap: 5px; padding: 10px 6px 8px;
       background: var(--surface); border: 1px solid var(--border-light);
       color: var(--muted); border-radius: 8px; cursor: pointer;
-      font-family: 'DM Mono', monospace; font-size: 0.6rem;
+      font-family: 'DM Mono', monospace; font-size: 0.58rem;
       letter-spacing: 0.05em; text-transform: uppercase;
       transition: all 0.18s ease; position: relative;
       -webkit-tap-highlight-color: transparent;
     }
-    .room-btn svg { width: 22px; height: 22px; transition: transform 0.18s ease; color: var(--muted); }
+    .room-btn svg { width: 20px; height: 20px; transition: transform 0.18s ease; color: var(--muted); }
     /* SVG shapes — use currentColor so they follow button color */
     .room-btn svg path   { fill: currentColor; stroke: none; transition: fill 0.18s; }
     .room-btn svg rect   { fill: currentColor; transition: fill 0.18s; }
@@ -573,8 +575,8 @@
       #interests-input { font-size: 16px; }
       header { padding: 10px 16px; }
       .logo { font-size: 1rem; }
-      #home-screen { gap: 18px; padding: 16px; }
-      .hero h1 { font-size: 2rem; }
+      #home-screen { gap: 12px; padding: 12px 16px; }
+      .hero h1 { font-size: 1.7rem; }
       .mode-btn { padding: 10px 16px; }
       .btn-start { padding: 12px 36px; }
       .rooms-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
@@ -620,11 +622,11 @@
       <div class="rooms-grid">
 
         <button class="room-btn" data-room="gaming" onclick="selectRoom('gaming', this)">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <rect x="2" y="6" width="20" height="12" rx="4"/>
-            <line x1="9" y1="12" x2="9" y2="12" stroke-width="2.5" stroke-linecap="round"/>
-            <line x1="7" y1="10" x2="11" y2="10" stroke-width="0"/>
-            <path d="M7 12h4M9 10v4M15 11h.01M17 13h.01" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="6" width="20" height="12" rx="4" stroke="currentColor" stroke-width="1.8" fill="none"/>
+            <path d="M7 12h4M9 10v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="15.5" cy="11" r="1" fill="currentColor"/>
+            <circle cx="17.5" cy="13" r="1" fill="currentColor"/>
           </svg>
           Gaming
         </button>
@@ -646,18 +648,19 @@
         </button>
 
         <button class="room-btn" data-room="movies" onclick="selectRoom('movies', this)">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <rect x="2" y="3" width="20" height="18" rx="3" fill="currentColor" opacity="0.15"/>
-            <rect x="2" y="3" width="20" height="18" rx="3" stroke="currentColor" stroke-width="2" fill="none"/>
-            <path d="M8 5v14M16 5v14M2 9h3M2 15h3M19 9h3M19 15h3" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="2" y="7" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M2 11h20" stroke="currentColor" stroke-width="1.8"/>
+            <path d="M7 7V3M17 7V3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M2 7l5-4M9 7l5-4M16 7l5-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
           Movies
         </button>
 
         <button class="room-btn" data-room="languages" onclick="selectRoom('languages', this)">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2" fill="none"/>
-            <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" stroke="currentColor" stroke-width="2" fill="none"/>
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+            <path d="M8 9h8M8 13h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
           </svg>
           Languages
         </button>
