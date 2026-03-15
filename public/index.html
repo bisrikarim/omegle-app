@@ -159,7 +159,141 @@
     .tag-remove { cursor: pointer; opacity: 0.6; font-size: 0.8rem; line-height: 1; }
     .tag-remove:hover { opacity: 1; color: var(--danger); }
 
+    /* ── Human Verification Overlay ── */
+    #verify-overlay {
+      position: fixed; inset: 0; z-index: 1000;
+      background: rgba(10, 10, 15, 0.85);
+      backdrop-filter: blur(12px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    #verify-overlay.show {
+      opacity: 1; pointer-events: all;
+    }
+    :root.light #verify-overlay {
+      background: rgba(245, 245, 247, 0.88);
+    }
+    .verify-card {
+      background: var(--surface);
+      border: 1px solid var(--border-light);
+      border-radius: 16px;
+      padding: 32px 28px 28px;
+      width: 360px; max-width: 90vw;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 20px;
+      transform: translateY(12px);
+      transition: transform 0.3s ease;
+    }
+    #verify-overlay.show .verify-card {
+      transform: translateY(0);
+    }
+    .verify-eyebrow {
+      font-size: 0.6rem; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--muted);
+      opacity: 0.6;
+    }
+    .verify-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.3rem; font-weight: 800;
+      letter-spacing: -0.02em;
+      text-align: center; line-height: 1.2;
+      margin-top: -8px;
+    }
+    .verify-title span { color: var(--accent); }
+    .verify-subtitle {
+      font-size: 0.72rem; color: var(--muted);
+      text-align: center; line-height: 1.6;
+      margin-top: -8px;
+      transition: opacity 0.18s ease;
+    }
+    .verify-shapes {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 10px; width: 100%;
+      transition: opacity 0.18s ease;
+    }
+    .shape-btn {
+      aspect-ratio: 1;
+      border-radius: 12px;
+      border: 1.5px solid var(--border-light);
+      background: var(--bg);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .shape-btn:hover {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      transform: scale(1.04);
+    }
+    .shape-btn.selected {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .shape-btn.wrong {
+      border-color: var(--danger);
+      background: rgba(248,113,113,0.08);
+      animation: shake 0.35s ease;
+    }
+    .shape-btn.correct {
+      border-color: var(--green);
+      background: rgba(74,222,128,0.1);
+    }
+    @keyframes shake {
+      0%,100%{ transform: translateX(0); }
+      20%    { transform: translateX(-6px); }
+      60%    { transform: translateX(6px); }
+      80%    { transform: translateX(-3px); }
+    }
+    .shape-btn svg { width: 36px; height: 36px; transition: transform 0.2s; }
+    .shape-btn:hover svg { transform: scale(1.1); }
+
+    .verify-hint {
+      font-size: 0.65rem; color: var(--muted); opacity: 0.5;
+      text-align: center; letter-spacing: 0.04em;
+    }
+    .verify-progress {
+      display: flex; gap: 6px; align-items: center;
+    }
+    .vp-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--border-light);
+      transition: all 0.25s ease;
+    }
+    .vp-dot.done { background: var(--green); transform: scale(1.2); }
+    .vp-dot.active { background: var(--accent); transform: scale(1.3); box-shadow: 0 0 0 3px var(--accent-glow); }
+
+    /* Success animation */
+    .verify-success {
+      display: none; flex-direction: column;
+      align-items: center; gap: 12px; padding: 8px 0;
+    }
+    .verify-success.show { display: flex; animation: fadeInUp 0.4s ease; }
+    @keyframes fadeInUp {
+      from { opacity:0; transform: translateY(10px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+    .success-ring {
+      width: 56px; height: 56px; border-radius: 50%;
+      border: 2px solid var(--green);
+      display: flex; align-items: center; justify-content: center;
+      color: var(--green); font-size: 1.4rem;
+      animation: popIn 0.4s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes popIn {
+      from { transform: scale(0); opacity: 0; }
+      to   { transform: scale(1); opacity: 1; }
+    }
+    .verify-success-text {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem; font-weight: 700; color: var(--green);
+    }
+
     /* ── Topic Rooms ── */
+
     .rooms-wrap {
       display: flex; flex-direction: column; gap: 8px;
       align-items: center; width: 100%; max-width: 400px;
@@ -888,6 +1022,25 @@
     </div>
   </div>
 
+  <!-- Human Verification Overlay -->
+  <div id="verify-overlay">
+    <div class="verify-card">
+      <div class="verify-eyebrow">quick check</div>
+      <div class="verify-title">Prove you're<br/><span>human</span></div>
+      <div class="verify-subtitle" id="verify-subtitle">Loading puzzle...</div>
+
+      <div class="verify-shapes" id="verify-shapes"></div>
+
+      <div class="verify-progress" id="verify-progress"></div>
+      <div class="verify-hint" id="verify-hint"></div>
+
+      <div class="verify-success" id="verify-success">
+        <div class="success-ring">✓</div>
+        <div class="verify-success-text">You're in!</div>
+      </div>
+    </div>
+  </div>
+
 </div><!-- end #app -->
 
 <script src="/socket.io/socket.io.js"></script>
@@ -951,6 +1104,7 @@ function showScreen(id) {
 function goHome() {
   stopMedia();
   showScreen('home-screen');
+  // Keep humanVerified = true after first verification (session-level)
 }
 function selectMode(mode) {
   chatMode = mode;
@@ -1020,8 +1174,15 @@ document.getElementById('interests-input').addEventListener('keydown', e => {
 //  CHAT FLOW
 // ═══════════════════════════════════════════
 function startChat() {
-  showScreen('waiting-screen');
-  socket.emit('find_partner', { interests: userTags, room: selectedRoom });
+  if (!window.humanVerified) {
+    showVerify(() => {
+      showScreen('waiting-screen');
+      socket.emit('find_partner', { interests: userTags, room: selectedRoom });
+    });
+  } else {
+    showScreen('waiting-screen');
+    socket.emit('find_partner', { interests: userTags, room: selectedRoom });
+  }
 }
 function cancelSearch() { socket.emit('stop'); goHome(); }
 function nextChat()     { cleanup(); socket.emit('next', { room: selectedRoom }); showScreen('waiting-screen'); }
@@ -1575,6 +1736,211 @@ socket.on('webrtc_screen_share', (isSharing) => {
   const badge = document.getElementById('screen-share-badge');
   if (badge) badge.style.display = isSharing ? 'block' : 'none';
 });
+
+// ═══════════════════════════════════════════
+//  HUMAN VERIFICATION
+// ═══════════════════════════════════════════
+window.humanVerified = false;
+let verifyCallback = null;
+let verifyStep = 0;
+let verifyTotal = 3;
+let verifyPuzzles = [];
+let verifyCurrentPuzzle = null;
+
+// Shape definitions — SVG paths, all stroke-based
+const SHAPES = {
+  circle: (c) => `<svg viewBox="0 0 48 48" fill="none"><circle cx="24" cy="24" r="16" stroke="${c}" stroke-width="2.5"/></svg>`,
+  square: (c) => `<svg viewBox="0 0 48 48" fill="none"><rect x="10" y="10" width="28" height="28" rx="4" stroke="${c}" stroke-width="2.5"/></svg>`,
+  triangle: (c) => `<svg viewBox="0 0 48 48" fill="none"><path d="M24 8L42 40H6L24 8Z" stroke="${c}" stroke-width="2.5" stroke-linejoin="round"/></svg>`,
+  star: (c) => `<svg viewBox="0 0 48 48" fill="none"><path d="M24 6l4.5 9 10 1.5-7.2 7 1.7 10L24 29l-9 4.5 1.7-10L9.5 16.5l10-1.5L24 6z" stroke="${c}" stroke-width="2.5" stroke-linejoin="round"/></svg>`,
+  diamond: (c) => `<svg viewBox="0 0 48 48" fill="none"><path d="M24 6L42 24L24 42L6 24L24 6Z" stroke="${c}" stroke-width="2.5" stroke-linejoin="round"/></svg>`,
+  cross: (c) => `<svg viewBox="0 0 48 48" fill="none"><path d="M14 14L34 34M34 14L14 34" stroke="${c}" stroke-width="2.5" stroke-linecap="round"/></svg>`,
+  heart: (c) => `<svg viewBox="0 0 48 48" fill="none"><path d="M24 38S8 28 8 17a9 9 0 0 1 16-5.6A9 9 0 0 1 40 17c0 11-16 21-16 21z" stroke="${c}" stroke-width="2.5" stroke-linejoin="round"/></svg>`,
+  moon: (c) => `<svg viewBox="0 0 48 48" fill="none"><path d="M30 10a16 16 0 1 1-16 26 12 12 0 0 0 16-26z" stroke="${c}" stroke-width="2.5" stroke-linejoin="round"/></svg>`,
+};
+
+// Puzzle types
+const PUZZLES = [
+  {
+    question: 'Tap the <b>odd one out</b> — 3 shapes are the same color',
+    generate() {
+      const shapeKeys = Object.keys(SHAPES);
+      const mainColor = 'var(--accent)';
+      const oddColor = 'var(--danger)';
+      const shapePool = shapeKeys.sort(() => Math.random() - 0.5).slice(0, 4);
+      const oddIdx = Math.floor(Math.random() * 4);
+      return shapePool.map((s, i) => ({
+        svg: SHAPES[s](i === oddIdx ? oddColor : mainColor),
+        correct: i === oddIdx,
+        label: s
+      }));
+    }
+  },
+  {
+    question: 'Tap the <b>circle</b>',
+    generate() {
+      const shapeKeys = Object.keys(SHAPES).filter(s => s !== 'circle');
+      const pool = shapeKeys.sort(() => Math.random() - 0.5).slice(0, 3);
+      const circleIdx = Math.floor(Math.random() * 4);
+      const items = [...pool];
+      items.splice(circleIdx, 0, 'circle');
+      return items.map((s, i) => ({
+        svg: SHAPES[s]('var(--accent)'),
+        correct: s === 'circle',
+        label: s
+      }));
+    }
+  },
+  {
+    question: 'Tap the <b>heart</b>',
+    generate() {
+      const shapeKeys = Object.keys(SHAPES).filter(s => s !== 'heart');
+      const pool = shapeKeys.sort(() => Math.random() - 0.5).slice(0, 3);
+      const heartIdx = Math.floor(Math.random() * 4);
+      const items = [...pool];
+      items.splice(heartIdx, 0, 'heart');
+      return items.map((s, i) => ({
+        svg: SHAPES[s]('var(--muted)'),
+        correct: s === 'heart',
+        label: s
+      }));
+    }
+  },
+  {
+    question: 'Tap the <b>star</b>',
+    generate() {
+      const shapeKeys = Object.keys(SHAPES).filter(s => s !== 'star');
+      const pool = shapeKeys.sort(() => Math.random() - 0.5).slice(0, 3);
+      const starIdx = Math.floor(Math.random() * 4);
+      const items = [...pool];
+      items.splice(starIdx, 0, 'star');
+      return items.map((s, i) => ({
+        svg: SHAPES[s]('var(--muted)'),
+        correct: s === 'star',
+        label: s
+      }));
+    }
+  },
+  {
+    question: 'Tap the shape with <b>straight lines only</b>',
+    generate() {
+      const straight = ['square', 'diamond', 'cross', 'triangle'];
+      const curved   = ['circle', 'heart', 'moon'];
+      const oddIdx   = Math.floor(Math.random() * 4);
+      const curvedPool = curved.sort(() => Math.random() - 0.5).slice(0, 3);
+      const straightOne = straight[Math.floor(Math.random() * straight.length)];
+      const items = [...curvedPool];
+      items.splice(oddIdx, 0, straightOne);
+      return items.map(s => ({
+        svg: SHAPES[s]('var(--accent)'),
+        correct: straight.includes(s),
+        label: s
+      }));
+    }
+  }
+];
+
+function buildPuzzleSet() {
+  // Pick 3 different puzzles randomly
+  const shuffled = [...PUZZLES].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, verifyTotal);
+}
+
+function renderPuzzle(puzzle, stepIdx) {
+  const items = puzzle.generate();
+  verifyCurrentPuzzle = items;
+
+  // Subtitle / question
+  document.getElementById('verify-subtitle').innerHTML = puzzle.question;
+
+  // Shapes grid
+  const grid = document.getElementById('verify-shapes');
+  grid.innerHTML = items.map((item, i) =>
+    `<button class="shape-btn" onclick="handleShapeTap(${i})" data-idx="${i}">
+      ${item.svg}
+    </button>`
+  ).join('');
+
+  // Progress dots
+  const progress = document.getElementById('verify-progress');
+  progress.innerHTML = Array.from({length: verifyTotal}, (_, i) =>
+    `<div class="vp-dot ${i < stepIdx ? 'done' : i === stepIdx ? 'active' : ''}"></div>`
+  ).join('');
+
+  // Hint
+  document.getElementById('verify-hint').textContent =
+    `Step ${stepIdx + 1} of ${verifyTotal}`;
+}
+
+function handleShapeTap(idx) {
+  const item = verifyCurrentPuzzle[idx];
+  const btn = document.querySelectorAll('.shape-btn')[idx];
+
+  // Disable all buttons during feedback
+  document.querySelectorAll('.shape-btn').forEach(b => b.style.pointerEvents = 'none');
+
+  if (item.correct) {
+    btn.classList.add('correct');
+    verifyStep++;
+
+    if (verifyStep >= verifyTotal) {
+      // All steps done — show success
+      setTimeout(() => {
+        document.getElementById('verify-shapes').style.opacity = '0';
+        document.getElementById('verify-subtitle').style.opacity = '0';
+        document.getElementById('verify-hint').style.opacity = '0';
+        document.getElementById('verify-progress').style.opacity = '0';
+        const s = document.getElementById('verify-success');
+        s.classList.add('show');
+        setTimeout(() => {
+          hideVerify();
+          window.humanVerified = true;
+          if (verifyCallback) verifyCallback();
+        }, 900);
+      }, 400);
+    } else {
+      // Next puzzle
+      setTimeout(() => {
+        document.getElementById('verify-shapes').style.opacity = '0';
+        setTimeout(() => {
+          renderPuzzle(verifyPuzzles[verifyStep], verifyStep);
+          document.getElementById('verify-shapes').style.opacity = '1';
+          document.querySelectorAll('.shape-btn').forEach(b => b.style.pointerEvents = '');
+        }, 200);
+      }, 400);
+    }
+  } else {
+    btn.classList.add('wrong');
+    // Shake and reset after delay
+    setTimeout(() => {
+      btn.classList.remove('wrong');
+      document.querySelectorAll('.shape-btn').forEach(b => b.style.pointerEvents = '');
+    }, 500);
+  }
+}
+
+function showVerify(callback) {
+  verifyCallback = callback;
+  verifyStep = 0;
+  verifyPuzzles = buildPuzzleSet();
+
+  // Reset UI
+  document.getElementById('verify-shapes').style.opacity = '1';
+  document.getElementById('verify-subtitle').style.opacity = '1';
+  document.getElementById('verify-hint').style.opacity = '1';
+  document.getElementById('verify-progress').style.opacity = '1';
+  document.getElementById('verify-success').classList.remove('show');
+
+  renderPuzzle(verifyPuzzles[0], 0);
+
+  const overlay = document.getElementById('verify-overlay');
+  overlay.classList.add('show');
+}
+
+function hideVerify() {
+  const overlay = document.getElementById('verify-overlay');
+  overlay.classList.remove('show');
+}
 
 // ═══════════════════════════════════════════
 //  FULLSCREEN
