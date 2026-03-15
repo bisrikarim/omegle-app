@@ -93,9 +93,20 @@
     #chat-screen.active { flex-direction: row; }
 
     /* HOME */
-    #home-screen { align-items: center; justify-content: flex-start; gap: 16px; padding: 20px 24px; overflow-y: auto; }
+    #home-screen {
+      align-items: center; justify-content: center;
+      overflow-y: auto; padding: 0;
+    }
     #home-screen::-webkit-scrollbar { width: 3px; }
     #home-screen::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 2px; }
+    /* Inner wrapper — centers on large screens, scrolls on small ones */
+    .home-inner {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 16px;
+      width: 100%; max-width: 520px;
+      padding: 24px 20px;
+      margin: auto;
+    }
     .hero { text-align: center; max-width: 420px; }
     .hero h1 { font-family: 'Syne', sans-serif; font-size: clamp(1.6rem,4vw,2.6rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1.05; margin-bottom: 8px; }
     .hero h1 em { font-style: normal; color: var(--accent); }
@@ -578,8 +589,9 @@
       #interests-input { font-size: 16px; }
       header { padding: 10px 16px; }
       .logo { font-size: 1rem; }
-      #home-screen { gap: 12px; padding: 12px 16px; }
+      .home-inner { gap: 12px; padding: 12px 16px; }
       .hero h1 { font-size: 1.7rem; }
+      .home-inner { max-width: 100%; }
       .mode-btn { padding: 10px 16px; }
       .btn-start { padding: 12px 36px; }
       .rooms-grid { grid-template-columns: repeat(3, 1fr); gap: 6px; }
@@ -605,6 +617,7 @@
 
   <!-- HOME -->
   <div id="home-screen" class="screen active">
+  <div class="home-inner">
     <div class="hero">
       <h1>Talk to<br/><em>strangers.</em></h1>
       <p>Anonymous, instant, ephemeral.<br/>No account. No trace. Just a conversation.</p>
@@ -700,6 +713,7 @@
     </div>
 
     <p class="disclaimer">By using this app you agree to be respectful. Conversations are not stored.</p>
+  </div><!-- end home-inner -->
   </div>
 
   <!-- WAITING -->
