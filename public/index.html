@@ -1070,17 +1070,20 @@ socket.on('matched', async ({ role, common, strangerSocketId }) => {
     document.getElementById('video-panel').classList.add('visible');
     document.getElementById('media-controls').classList.add('visible');
 
-    // Both A and B init media first
+    // Both init media independently
     await initMedia();
 
-    if (role === 'B') {
-      // B creates PC and signals A it's ready — only after media is ready
+    if (role === 'A') {
+      // A signals it's ready — waits for B to confirm back
+      socket.emit('webrtc_a_ready');
+      console.log('✅ A is ready — waiting for B');
+    } else {
+      // B creates PC, adds tracks, signals A
       await createPeerConnection();
       if (localStream) localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
       socket.emit('webrtc_b_ready');
       console.log('✅ B is ready — signaled A');
     }
-    // A waits for webrtc_b_ready before sending offer
   }
 });
 
@@ -1373,16 +1376,25 @@ socket.on('webrtc_ice_candidate', async ({ candidate }) => {
   await safeAddCandidate(candidate);
 });
 
-// B is ready — A now sends the offer
+// A signals ready first — server forwards to B, B sets up PC then signals back
+socket.on('webrtc_a_ready', async () => {
+  if (myRole !== 'B') return;
+  console.log('📡 A is ready — B setting up PC');
+  if (!pc) {
+    await createPeerConnection();
+    if (localStream) localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+  }
+  socket.emit('webrtc_b_ready');
+  console.log('✅ B confirmed ready — A will now send offer');
+});
+
+// B confirmed ready — A sends offer (guaranteed A has stream by now)
 socket.on('webrtc_b_ready', async () => {
   if (myRole !== 'A') return;
-  console.log('📡 B is ready — A creating offer');
+  console.log('📡 B confirmed — A creating offer');
   if (!localStream) {
-    console.warn('⚠ A has no localStream when B_ready arrived — retrying in 500ms');
-    setTimeout(async () => {
-      if (localStream) await startWebRTC();
-      else console.error('❌ Still no localStream — cannot start WebRTC');
-    }, 500);
+    console.warn('⚠ A has no stream — retrying in 300ms');
+    setTimeout(async () => { if (localStream) await startWebRTC(); }, 300);
     return;
   }
   await startWebRTC();
