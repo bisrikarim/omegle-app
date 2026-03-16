@@ -1070,15 +1070,16 @@ socket.on('matched', async ({ role, common, strangerSocketId }) => {
     document.getElementById('video-panel').classList.add('visible');
     document.getElementById('media-controls').classList.add('visible');
 
-    // Both init media independently
     await initMedia();
 
     if (role === 'A') {
-      // A signals it's ready — B will respond with webrtc_b_ready
+      // A creates its PC first, adds tracks, THEN signals B
+      await createPeerConnection();
+      if (localStream) localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
       socket.emit('webrtc_a_ready');
-      console.log('✅ A is ready — waiting for B');
+      console.log('✅ A ready (PC + stream) — waiting for B');
     }
-    // B does nothing here — waits for webrtc_a_ready from A
+    // B waits for webrtc_a_ready — does nothing here
   }
 });
 
@@ -1375,10 +1376,8 @@ socket.on('webrtc_ice_candidate', async ({ candidate }) => {
 socket.on('webrtc_a_ready', async () => {
   if (myRole !== 'B') return;
   console.log('📡 A is ready — B setting up PC');
-  if (!pc) {
-    await createPeerConnection();
-    if (localStream) localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
-  }
+  await createPeerConnection();
+  if (localStream) localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
   socket.emit('webrtc_b_ready');
   console.log('✅ B confirmed ready — A will now send offer');
 });
@@ -1386,13 +1385,20 @@ socket.on('webrtc_a_ready', async () => {
 // B confirmed ready — A sends offer (guaranteed A has stream by now)
 socket.on('webrtc_b_ready', async () => {
   if (myRole !== 'A') return;
-  console.log('📡 B confirmed — A creating offer');
-  if (!localStream) {
-    console.warn('⚠ A has no stream — retrying in 300ms');
-    setTimeout(async () => { if (localStream) await startWebRTC(); }, 300);
+  console.log('📡 B confirmed — A sending offer');
+  if (!pc || !localStream) {
+    console.warn('⚠ A not ready yet — retrying in 300ms');
+    setTimeout(async () => {
+      if (localStream && !pc) await createPeerConnection();
+      if (localStream) await startWebRTC();
+    }, 300);
     return;
   }
-  await startWebRTC();
+  // PC already created in matched handler — just send offer
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  console.log('📤 Sending offer to B');
+  socket.emit('webrtc_offer', { sdp: pc.localDescription });
 });
 
 const SVG_CAM_ON = `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" style="width:28px;height:28px">
