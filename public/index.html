@@ -292,7 +292,200 @@
       font-size: 1rem; font-weight: 700; color: var(--green);
     }
 
+    /* ── Keep in Touch ── */
+    .btn-kit {
+      background: transparent;
+      border: 1px solid rgba(74,222,128,0.4);
+      color: var(--green);
+      padding: 5px 12px; font-family: 'DM Mono', monospace; font-size: 0.68rem;
+      cursor: pointer; border-radius: 2px; transition: all 0.2s;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-kit:hover  { background: rgba(74,222,128,0.1); border-color: var(--green); }
+    .btn-kit.pending { opacity: 0.55; cursor: default; border-style: dashed; }
+    .btn-kit.matched { background: rgba(74,222,128,0.12); border-color: var(--green); color: var(--green); cursor: default; }
+
+    /* KIT modal overlay */
+    #kit-overlay {
+      position: fixed; inset: 0; z-index: 999;
+      background: rgba(10,10,15,0.82);
+      backdrop-filter: blur(10px);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.28s ease;
+    }
+    #kit-overlay.show { opacity: 1; pointer-events: all; }
+    :root.light #kit-overlay { background: rgba(245,245,247,0.85); }
+
+    .kit-card {
+      background: var(--surface);
+      border: 1px solid var(--border-light);
+      border-radius: 16px;
+      padding: 32px 28px;
+      width: 340px; max-width: 90vw;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 18px;
+      transform: translateY(10px) scale(0.97);
+      transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    #kit-overlay.show .kit-card { transform: translateY(0) scale(1); }
+
+    .kit-eyebrow {
+      font-size: 0.58rem; letter-spacing: 0.14em;
+      text-transform: uppercase; color: var(--muted); opacity: 0.6;
+    }
+    .kit-title {
+      font-family: 'Syne', sans-serif; font-size: 1.25rem;
+      font-weight: 800; letter-spacing: -0.02em;
+      text-align: center; line-height: 1.2; margin-top: -6px;
+    }
+    .kit-title span { color: var(--green); }
+    .kit-subtitle {
+      font-size: 0.72rem; color: var(--muted);
+      text-align: center; line-height: 1.6; margin-top: -6px;
+    }
+
+    /* Code display */
+    .kit-code-wrap {
+      display: flex; flex-direction: column;
+      align-items: center; gap: 8px; width: 100%;
+    }
+    .kit-code-label {
+      font-size: 0.6rem; color: var(--muted); letter-spacing: 0.1em;
+      text-transform: uppercase; opacity: 0.6;
+    }
+    .kit-code {
+      display: flex; gap: 6px; align-items: center;
+      justify-content: center;
+    }
+    .kit-code-char {
+      width: 38px; height: 46px;
+      background: var(--bg);
+      border: 1.5px solid var(--accent);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800;
+      color: var(--accent);
+      animation: charPop 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+    }
+    .kit-code-char:nth-child(1) { animation-delay: 0.05s; }
+    .kit-code-char:nth-child(2) { animation-delay: 0.1s;  }
+    .kit-code-char:nth-child(3) { animation-delay: 0.15s; }
+    .kit-code-char:nth-child(4) { animation-delay: 0.2s;  }
+    .kit-code-char:nth-child(5) { animation-delay: 0.25s; }
+    .kit-code-char:nth-child(6) { animation-delay: 0.3s;  }
+    @keyframes charPop {
+      from { opacity:0; transform: scale(0.5) translateY(8px); }
+      to   { opacity:1; transform: scale(1) translateY(0); }
+    }
+    .kit-code-sep {
+      font-size: 1.2rem; color: var(--muted); opacity: 0.3;
+      margin: 0 -2px;
+    }
+
+    .kit-copy-btn {
+      background: var(--accent-dim); border: 1px solid var(--accent);
+      color: var(--accent); padding: 7px 18px;
+      font-family: 'DM Mono', monospace; font-size: 0.72rem;
+      cursor: pointer; border-radius: 4px; transition: all 0.18s;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .kit-copy-btn:hover { background: var(--accent); color: #fff; }
+
+    .kit-expiry {
+      font-size: 0.6rem; color: var(--muted); opacity: 0.4;
+      letter-spacing: 0.04em;
+    }
+
+    /* Reconnect panel in kit-card */
+    .kit-divider {
+      width: 100%; border: none;
+      border-top: 1px solid var(--border);
+      margin: 0;
+    }
+    .kit-reconnect-label {
+      font-size: 0.6rem; color: var(--muted); letter-spacing: 0.1em;
+      text-transform: uppercase; opacity: 0.6; align-self: flex-start;
+    }
+    .kit-reconnect-row {
+      display: flex; gap: 8px; width: 100%;
+    }
+    #kit-code-input {
+      flex: 1; background: var(--bg); border: 1px solid var(--border-light);
+      color: var(--text); padding: 8px 12px;
+      font-family: 'Syne', monospace; font-size: 0.9rem; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      border-radius: 4px; outline: none; transition: border-color 0.2s;
+      text-align: center;
+    }
+    #kit-code-input:focus { border-color: var(--accent); }
+    #kit-code-input::placeholder { color: var(--muted); opacity: 0.3; font-weight: 400; letter-spacing: 0; font-size: 0.75rem; }
+    .kit-reconnect-btn {
+      background: var(--accent); border: none; color: #fff;
+      padding: 8px 16px; font-family: 'DM Mono', monospace;
+      font-size: 0.72rem; cursor: pointer; border-radius: 4px;
+      transition: opacity 0.18s; white-space: nowrap;
+    }
+    .kit-reconnect-btn:hover { opacity: 0.85; }
+
+    .kit-error {
+      font-size: 0.65rem; color: var(--danger);
+      text-align: center; min-height: 16px;
+      animation: fadeIn 0.2s ease;
+    }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+    .kit-close {
+      background: transparent; border: 1px solid var(--border-light);
+      color: var(--muted); padding: 6px 20px;
+      font-family: 'DM Mono', monospace; font-size: 0.7rem;
+      cursor: pointer; border-radius: 4px; transition: all 0.18s;
+      align-self: stretch; text-align: center;
+    }
+    .kit-close:hover { border-color: var(--text); color: var(--text); }
+
+    /* Home reconnect widget */
+    .kit-home-wrap {
+      display: flex; flex-direction: column; gap: 6px;
+      width: 100%; max-width: 340px;
+      padding: 14px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border-light);
+      border-radius: 10px;
+    }
+    .kit-home-label {
+      font-size: 0.6rem; color: var(--muted); letter-spacing: 0.1em;
+      text-transform: uppercase; display: flex; align-items: center; gap: 6px;
+    }
+    .kit-home-label::before {
+      content: ''; display: inline-block;
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--green); box-shadow: 0 0 6px var(--green);
+    }
+    .kit-home-row { display: flex; gap: 8px; }
+    #kit-home-input {
+      flex: 1; background: var(--bg); border: 1px solid var(--border-light);
+      color: var(--text); padding: 8px 12px;
+      font-family: 'Syne', monospace; font-size: 0.88rem; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      border-radius: 4px; outline: none; transition: border-color 0.2s;
+      text-align: center;
+    }
+    #kit-home-input:focus { border-color: var(--green); }
+    #kit-home-input::placeholder { color: var(--muted); opacity: 0.3; font-weight: 400; letter-spacing: 0; font-size: 0.72rem; text-transform: none; }
+    .kit-home-btn {
+      background: rgba(74,222,128,0.12); border: 1px solid rgba(74,222,128,0.4);
+      color: var(--green); padding: 8px 14px;
+      font-family: 'DM Mono', monospace; font-size: 0.72rem;
+      cursor: pointer; border-radius: 4px; transition: all 0.18s; white-space: nowrap;
+    }
+    .kit-home-btn:hover { background: var(--green); color: #0a0a0f; }
+    .kit-home-error {
+      font-size: 0.62rem; color: var(--danger); min-height: 14px;
+    }
+
     /* ── Topic Rooms ── */
+
 
     .rooms-wrap {
       display: flex; flex-direction: column; gap: 8px;
@@ -846,6 +1039,20 @@
       <div class="tags-list" id="tags-list"></div>
     </div>
 
+    <!-- Keep in touch reconnect -->
+    <div class="kit-home-wrap">
+      <div class="kit-home-label">Reconnect with a stranger</div>
+      <div class="kit-home-row">
+        <input id="kit-home-input" type="text" placeholder="Enter your code" maxlength="6"
+          oninput="this.value=this.value.toUpperCase()"
+          onkeydown="if(event.key==='Enter') useKITCodeFromHome()"/>
+        <button class="kit-home-btn" onclick="useKITCodeFromHome()">
+          <i class="fa-solid fa-arrow-right-long"></i> Go
+        </button>
+      </div>
+      <div class="kit-home-error" id="kit-home-error"></div>
+    </div>
+
     <p class="disclaimer">By using this app you agree to be respectful. Conversations are not stored.</p>
   </div><!-- end home-inner -->
   </div>
@@ -988,6 +1195,9 @@
           <span class="room-badge" id="room-badge" style="display:none"></span>
         </div>
         <div class="chat-actions">
+          <button class="btn-kit" id="btn-kit" onclick="requestKIT()" style="display:none">
+            <i class="fa-solid fa-link"></i> Keep in touch
+          </button>
           <button class="btn-next" onclick="nextChat()"><i class="fa-solid fa-forward-step"></i> Next</button>
           <button class="btn-stop" onclick="stopChat()"><i class="fa-solid fa-stop"></i> Stop</button>
           <button class="btn-report" onclick="reportStranger()" id="btn-report" style="display:none"><i class="fa-solid fa-flag"></i> Report</button>
@@ -1019,6 +1229,53 @@
     <div class="disc-btns">
       <button class="btn-new" onclick="startChat()"><i class="fa-solid fa-arrow-right-long"></i> New stranger</button>
       <button class="btn-home" onclick="goHome()">Home</button>
+    </div>
+  </div>
+
+  <!-- Keep in Touch overlay -->
+  <div id="kit-overlay">
+    <div class="kit-card" id="kit-card-inner">
+
+      <!-- State: request sent / waiting -->
+      <div id="kit-waiting-state" style="display:none;flex-direction:column;align-items:center;gap:14px;width:100%;">
+        <div class="kit-eyebrow">keep in touch</div>
+        <div class="kit-title">Waiting for<br/><span>stranger</span></div>
+        <div class="kit-subtitle">They need to accept too.<br/>Both of you must agree.</div>
+        <div class="spinner" style="width:36px;height:36px;border-width:2px;"></div>
+        <button class="kit-close" onclick="cancelKIT()">Cancel</button>
+      </div>
+
+      <!-- State: code revealed -->
+      <div id="kit-code-state" style="display:none;flex-direction:column;align-items:center;gap:16px;width:100%;">
+        <div class="kit-eyebrow">keep in touch</div>
+        <div class="kit-title">Here's your<br/><span>code</span></div>
+        <div class="kit-subtitle">Share it with each other.<br/>Use it anytime within 48h.</div>
+        <div class="kit-code-wrap">
+          <div class="kit-code-label">your reconnect code</div>
+          <div class="kit-code" id="kit-code-display"></div>
+        </div>
+        <button class="kit-copy-btn" onclick="copyKITCode()">
+          <i class="fa-regular fa-copy"></i>
+          <span id="kit-copy-label">Copy code</span>
+        </button>
+        <div class="kit-expiry">Expires in 48 hours · anonymous · no account needed</div>
+        <hr class="kit-divider"/>
+        <button class="kit-close" onclick="hideKITOverlay()">Done</button>
+      </div>
+
+      <!-- State: reconnect from home (find a previous stranger) -->
+      <div id="kit-reconnect-state" style="display:none;flex-direction:column;align-items:center;gap:16px;width:100%;">
+        <div class="kit-eyebrow">keep in touch</div>
+        <div class="kit-title">Enter your<br/><span>code</span></div>
+        <div class="kit-subtitle">You'll be matched directly<br/>with your previous stranger.</div>
+        <div class="kit-reconnect-row">
+          <input id="kit-code-input" type="text" placeholder="ABC123" maxlength="6" oninput="this.value=this.value.toUpperCase()"/>
+          <button class="kit-reconnect-btn" onclick="submitKITCode()">Connect</button>
+        </div>
+        <div class="kit-error" id="kit-reconnect-error"></div>
+        <button class="kit-close" onclick="hideKITOverlay()">Cancel</button>
+      </div>
+
     </div>
   </div>
 
@@ -1198,6 +1455,10 @@ socket.on('matched', async ({ role, common, strangerSocketId }) => {
   window.currentStrangerSocketId = strangerSocketId;
   const rb = document.getElementById('btn-report');
   if (rb) { rb.style.display = 'inline-flex'; rb.disabled = false; rb.innerHTML = '<i class="fa-solid fa-flag"></i> Report'; }
+  // Show KIT button and reset state
+  const kitBtn = document.getElementById('btn-kit');
+  if (kitBtn) { kitBtn.style.display = 'inline-flex'; kitBtn.className = 'btn-kit'; kitBtn.innerHTML = '<i class="fa-solid fa-link"></i> Keep in touch'; }
+  kitRequestSent = false;
   myRole = role;
   clearMessages();
   const banner = document.getElementById('common-banner');
@@ -1530,6 +1791,9 @@ function cleanup() {
   window.currentStrangerSocketId = null;
   const rb = document.getElementById('btn-report');
   if (rb) rb.style.display = 'none';
+  const kitBtn = document.getElementById('btn-kit');
+  if (kitBtn) kitBtn.style.display = 'none';
+  kitRequestSent = false;
   stopMedia();
   stopTimer();
   clearMessages();
@@ -1735,6 +1999,135 @@ function stopScreenShare() {
 socket.on('webrtc_screen_share', (isSharing) => {
   const badge = document.getElementById('screen-share-badge');
   if (badge) badge.style.display = isSharing ? 'block' : 'none';
+});
+
+// ═══════════════════════════════════════════
+//  KEEP IN TOUCH (KIT)
+// ═══════════════════════════════════════════
+let kitRequestSent = false;
+let currentKITCode = null;
+
+function requestKIT() {
+  if (kitRequestSent) return;
+  kitRequestSent = true;
+  const btn = document.getElementById('btn-kit');
+  btn.classList.add('pending');
+  btn.innerHTML = '<i class="fa-solid fa-hourglass-half"></i> Waiting...';
+  socket.emit('kit_request');
+  // Show overlay in waiting state
+  showKITState('waiting');
+  showKITOverlay();
+}
+
+function cancelKIT() {
+  kitRequestSent = false;
+  socket.emit('kit_cancel');
+  hideKITOverlay();
+  const btn = document.getElementById('btn-kit');
+  if (btn) { btn.classList.remove('pending'); btn.innerHTML = '<i class="fa-solid fa-link"></i> Keep in touch'; }
+}
+
+function showKITOverlay() {
+  document.getElementById('kit-overlay').classList.add('show');
+}
+
+function hideKITOverlay() {
+  document.getElementById('kit-overlay').classList.remove('show');
+}
+
+function showKITState(state) {
+  // Hide all states
+  ['kit-waiting-state','kit-code-state','kit-reconnect-state'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  });
+  // Show requested state
+  const target = document.getElementById(`kit-${state}-state`);
+  if (target) target.style.display = 'flex';
+}
+
+function renderKITCode(code) {
+  const display = document.getElementById('kit-code-display');
+  display.innerHTML = code.split('').map((ch, i) =>
+    (i === 3 ? '<span class="kit-code-sep">—</span>' : '') +
+    `<div class="kit-code-char">${ch}</div>`
+  ).join('');
+}
+
+function copyKITCode() {
+  if (!currentKITCode) return;
+  navigator.clipboard.writeText(currentKITCode).then(() => {
+    const lbl = document.getElementById('kit-copy-label');
+    lbl.textContent = 'Copied!';
+    setTimeout(() => lbl.textContent = 'Copy code', 2000);
+  });
+}
+
+function submitKITCode() {
+  const code = document.getElementById('kit-code-input').value.trim().toUpperCase();
+  const err = document.getElementById('kit-reconnect-error');
+  err.textContent = '';
+  if (code.length !== 6) { err.textContent = 'Code must be 6 characters.'; return; }
+  socket.emit('kit_reconnect', { code });
+  document.querySelector('.kit-reconnect-btn').textContent = 'Connecting...';
+}
+
+function useKITCodeFromHome() {
+  const input = document.getElementById('kit-home-input');
+  const code = input.value.trim().toUpperCase();
+  const err = document.getElementById('kit-home-error');
+  err.textContent = '';
+  if (code.length !== 6) { err.textContent = 'Enter a 6-character code.'; return; }
+  // Validate first, then go to waiting
+  socket.emit('kit_reconnect', { code });
+}
+
+// ── Socket events from server ──
+socket.on('kit_pending', () => {
+  // Stranger hasn't accepted yet — already in waiting state
+  addSystemMessage('💚 Keep in touch request sent — waiting for stranger...');
+});
+
+socket.on('kit_matched', ({ code }) => {
+  currentKITCode = code;
+  // Update button
+  const btn = document.getElementById('btn-kit');
+  if (btn) { btn.classList.remove('pending'); btn.classList.add('matched'); btn.innerHTML = '<i class="fa-solid fa-check"></i> Code ready'; }
+  addSystemMessage(`💚 You both agreed! Your code: ${code}`);
+  // Show code overlay
+  showKITState('code');
+  renderKITCode(code);
+  showKITOverlay();
+});
+
+socket.on('kit_stranger_requested', () => {
+  // The stranger asked first — show notification in chat
+  addSystemMessage('💚 Stranger wants to keep in touch — click "Keep in touch" to accept!');
+  const btn = document.getElementById('btn-kit');
+  if (btn) {
+    btn.style.borderColor = 'var(--green)';
+    btn.style.animation = 'pulse 1s 3';
+  }
+});
+
+socket.on('kit_error', ({ message }) => {
+  // Error from server (code invalid/expired)
+  const homeErr = document.getElementById('kit-home-error');
+  const reconnErr = document.getElementById('kit-reconnect-error');
+  if (homeErr) homeErr.textContent = message;
+  if (reconnErr) reconnErr.textContent = message;
+  const reconnBtn = document.querySelector('.kit-reconnect-btn');
+  if (reconnBtn) reconnBtn.textContent = 'Connect';
+  hideKITOverlay();
+});
+
+socket.on('kit_reconnect_ok', ({ strangerSocketId }) => {
+  // Redirect to waiting screen — server will auto-match the two
+  window.currentStrangerSocketId = strangerSocketId;
+  const homeErr = document.getElementById('kit-home-error');
+  if (homeErr) homeErr.textContent = '';
+  hideKITOverlay();
+  showScreen('waiting-screen');
 });
 
 // ═══════════════════════════════════════════
