@@ -513,6 +513,7 @@ io.on('connection', async (socket) => {
 
   socket.on('stop', () => { disconnect(socket); socket.emit('stopped'); broadcastStats(); });
   socket.on('webrtc_screen_share',  (data) => forwardToPartner(socket, 'webrtc_screen_share', data));
+  socket.on('webrtc_b_ready',       ()     => forwardToPartner(socket, 'webrtc_b_ready', {}));
 
   // ── Keep in Touch ──
   socket.on('kit_request', () => {
