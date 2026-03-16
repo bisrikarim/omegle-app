@@ -160,8 +160,6 @@
     .tag-remove:hover { opacity: 1; color: var(--danger); }
 
     /* ── Topic Rooms ── */
-
-
     .rooms-wrap {
       display: flex; flex-direction: column; gap: 8px;
       align-items: center; width: 100%; max-width: 400px;
@@ -890,7 +888,6 @@
     </div>
   </div>
 
-
 </div><!-- end #app -->
 
 <script src="/socket.io/socket.io.js"></script>
@@ -1040,7 +1037,6 @@ socket.on('matched', async ({ role, common, strangerSocketId }) => {
   window.currentStrangerSocketId = strangerSocketId;
   const rb = document.getElementById('btn-report');
   if (rb) { rb.style.display = 'inline-flex'; rb.disabled = false; rb.innerHTML = '<i class="fa-solid fa-flag"></i> Report'; }
-
   myRole = role;
   clearMessages();
   const banner = document.getElementById('common-banner');
@@ -1069,17 +1065,10 @@ socket.on('matched', async ({ role, common, strangerSocketId }) => {
     startModeration();
     document.getElementById('video-panel').classList.add('visible');
     document.getElementById('media-controls').classList.add('visible');
-
     await initMedia();
-
     if (role === 'A') {
-      // A creates its PC first, adds tracks, THEN signals B
-      await createPeerConnection();
-      if (localStream) localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
-      socket.emit('webrtc_a_ready');
-      console.log('✅ A ready (PC + stream) — waiting for B');
+      setTimeout(() => startWebRTC(), 400);
     }
-    // B waits for webrtc_a_ready — does nothing here
   }
 });
 
@@ -1158,12 +1147,14 @@ msgInput.addEventListener('input', () => {
 });
 
 // ═══════════════════════════════════════════
-//  WEBRTC — robuste avec TURN forcé
+//  WEBRTC
 // ═══════════════════════════════════════════
 let wakeLock = null;
 
 async function acquireWakeLock() {
-  try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {}
+  try {
+    if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
+  } catch(e) {}
 }
 async function releaseWakeLock() {
   if (wakeLock) { await wakeLock.release(); wakeLock = null; }
@@ -1204,201 +1195,54 @@ async function switchCamera() {
   } catch(e) {}
 }
 
-// ── ICE candidate queue ──
-// Candidates can arrive before setRemoteDescription — buffer them
-let iceCandidateQueue = [];
-
-async function safeAddCandidate(candidate) {
-  if (!pc) return;
-  try {
-    if (pc.remoteDescription && pc.remoteDescription.type) {
-      await pc.addIceCandidate(new RTCIceCandidate(candidate));
-    } else {
-      iceCandidateQueue.push(candidate);
-    }
-  } catch(e) { console.warn('ICE candidate error:', e.message); }
-}
-
-async function drainIceCandidates() {
-  if (!pc) return;
-  const queue = [...iceCandidateQueue];
-  iceCandidateQueue = [];
-  for (const c of queue) {
-    try { await pc.addIceCandidate(new RTCIceCandidate(c)); } catch(e) {}
-  }
+async function startWebRTC() {
+  if (!localStream) return;
+  await createPeerConnection();
+  localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  socket.emit('webrtc_offer', { sdp: pc.localDescription });
 }
 
 async function createPeerConnection() {
   if (pc) { pc.close(); pc = null; }
-  iceCandidateQueue = [];
-
-  // ── Await TURN credentials — critical ──
   const iceConfig = await getIceServers();
-
-  // Add Google STUN as extra fallback
-  const servers = iceConfig.iceServers || [];
-  const hasStun = servers.some(s => (Array.isArray(s.urls) ? s.urls : [s.urls]).some(u => u.startsWith('stun:')));
-  if (!hasStun) servers.push({ urls: 'stun:stun.l.google.com:19302' });
-
-  pc = new RTCPeerConnection({ iceServers: servers });
-
-  console.log('🔧 PeerConnection created with servers:', JSON.stringify(servers.map(s => s.urls)));
-
-  // ── ICE candidates → forward to partner ──
+  pc = new RTCPeerConnection(iceConfig);
   pc.onicecandidate = e => {
-    if (e.candidate) {
-      socket.emit('webrtc_ice_candidate', { candidate: e.candidate });
-    }
+    if (e.candidate) socket.emit('webrtc_ice_candidate', { candidate: e.candidate });
   };
-
-  // ── ICE connection state monitoring ──
-  pc.oniceconnectionstatechange = () => {
-    const state = pc?.iceConnectionState;
-    console.log('🧊 ICE state:', state);
-    if (state === 'failed') {
-      console.warn('ICE failed — restarting ICE');
-      pc.restartIce();
-    }
-    if (state === 'connected' || state === 'completed') {
-      // Log which candidate pair was used
-      pc.getStats().then(stats => {
-        stats.forEach(report => {
-          if (report.type === 'candidate-pair' && report.state === 'succeeded') {
-            console.log('✅ ICE pair used:', report.localCandidateId, '→', report.remoteCandidateId);
-          }
-        });
-      });
-    }
-  };
-
-  pc.onconnectionstatechange = () => {
-    const state = pc?.connectionState;
-    console.log('🔗 Connection state:', state);
-    if (state === 'connected') {
+  pc.ontrack = e => {
+    const remoteVideo = document.getElementById('video-stranger');
+    if (remoteVideo.srcObject !== e.streams[0]) {
+      remoteVideo.srcObject = e.streams[0];
       document.getElementById('stranger-cam-off').classList.remove('show');
     }
-    if (state === 'failed' || state === 'disconnected') {
-      addSystemMessage('⚠ Video connection lost. Text chat still active.');
+  };
+  pc.onconnectionstatechange = () => {
+    if (pc && (pc.connectionState === 'failed' || pc.connectionState === 'disconnected')) {
+      addSystemMessage('Video connection lost. Text chat still active.');
     }
   };
-
-  // ── Incoming remote tracks ──
-  // remoteStream is module-level to avoid GC issues
-  window._remoteStream = new MediaStream();
-  pc.ontrack = e => {
-    console.log('📹 Remote track received:', e.track.kind, '| readyState:', e.track.readyState);
-    window._remoteStream.addTrack(e.track);
-    const v = document.getElementById('video-stranger');
-
-    // Always reassign srcObject to force browser re-render
-    v.srcObject = null;
-    v.srcObject = window._remoteStream;
-
-    // Ensure autoplay works (Chrome blocks autoplay without user gesture workaround)
-    v.muted = false;
-    v.play().catch(err => {
-      console.warn('⚠ autoplay blocked:', err.message);
-      // Mute and retry — user can unmute
-      v.muted = true;
-      v.play().catch(() => {});
-    });
-
-    document.getElementById('stranger-cam-off').classList.remove('show');
-
-    // Monitor if track goes silent/black
-    e.track.onmute = () => {
-      console.warn('⚠ Remote track muted:', e.track.kind);
-      if (e.track.kind === 'video') {
-        document.getElementById('stranger-cam-off').classList.add('show');
-      }
-    };
-    e.track.onunmute = () => {
-      console.log('✅ Remote track unmuted:', e.track.kind);
-      if (e.track.kind === 'video') {
-        document.getElementById('stranger-cam-off').classList.remove('show');
-      }
-    };
-    e.track.onended = () => {
-      console.warn('⚠ Remote track ended:', e.track.kind);
-    };
-  };
 }
 
-// ── A: initiate offer (called only after B signals ready) ──
-async function startWebRTC() {
-  if (!localStream) {
-    console.warn('⚠ startWebRTC called but no localStream');
-    return;
-  }
-  // If PC already exists (shouldn't for A), close it
-  if (pc) { pc.close(); pc = null; }
-  await createPeerConnection();
-  localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
-  const offer = await pc.createOffer({ offerToReceiveAudio: true, offerToReceiveVideo: true });
-  await pc.setLocalDescription(offer);
-  console.log('📤 Sending offer to B');
-  socket.emit('webrtc_offer', { sdp: pc.localDescription });
-}
-
-// ── B: received offer → create answer ──
 socket.on('webrtc_offer', async ({ sdp }) => {
-  console.log('📥 Received offer');
-  // If B already set up PC in matched handler, reuse it
-  // Otherwise create fresh (fallback)
-  if (!pc) {
-    if (!localStream) await initMedia();
-    await createPeerConnection();
-    if (localStream) localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
-  }
+  if (!localStream) await initMedia();
+  await createPeerConnection();
+  if (localStream) localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
   await pc.setRemoteDescription(new RTCSessionDescription(sdp));
-  await drainIceCandidates();
   const answer = await pc.createAnswer();
   await pc.setLocalDescription(answer);
-  console.log('📤 Sending answer');
   socket.emit('webrtc_answer', { sdp: pc.localDescription });
 });
 
-// ── A: received answer ──
 socket.on('webrtc_answer', async ({ sdp }) => {
-  if (!pc) return;
-  console.log('📥 Received answer');
-  await pc.setRemoteDescription(new RTCSessionDescription(sdp));
-  await drainIceCandidates();
+  if (pc) await pc.setRemoteDescription(new RTCSessionDescription(sdp));
 });
 
-// ── Both: received ICE candidate ──
 socket.on('webrtc_ice_candidate', async ({ candidate }) => {
-  if (!candidate) return;
-  await safeAddCandidate(candidate);
-});
-
-// A signals ready first — server forwards to B, B sets up PC then signals back
-socket.on('webrtc_a_ready', async () => {
-  if (myRole !== 'B') return;
-  console.log('📡 A is ready — B setting up PC');
-  await createPeerConnection();
-  if (localStream) localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
-  socket.emit('webrtc_b_ready');
-  console.log('✅ B confirmed ready — A will now send offer');
-});
-
-// B confirmed ready — A sends offer (guaranteed A has stream by now)
-socket.on('webrtc_b_ready', async () => {
-  if (myRole !== 'A') return;
-  console.log('📡 B confirmed — A sending offer');
-  if (!pc || !localStream) {
-    console.warn('⚠ A not ready yet — retrying in 300ms');
-    setTimeout(async () => {
-      if (localStream && !pc) await createPeerConnection();
-      if (localStream) await startWebRTC();
-    }, 300);
-    return;
-  }
-  // PC already created in matched handler — just send offer
-  const offer = await pc.createOffer();
-  await pc.setLocalDescription(offer);
-  console.log('📤 Sending offer to B');
-  socket.emit('webrtc_offer', { sdp: pc.localDescription });
+  try {
+    if (pc && candidate) await pc.addIceCandidate(new RTCIceCandidate(candidate));
+  } catch(e) {}
 });
 
 const SVG_CAM_ON = `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" style="width:28px;height:28px">
@@ -1464,7 +1308,6 @@ function stopMedia() {
   releaseWakeLock();
   document.getElementById('video-you').srcObject = null;
   document.getElementById('video-stranger').srcObject = null;
-  window._remoteStream = null;
   document.getElementById('video-panel').classList.remove('visible');
   document.getElementById('media-controls').classList.remove('visible');
   document.getElementById('stranger-cam-off').classList.remove('show');
@@ -1526,7 +1369,6 @@ function cleanup() {
   window.currentStrangerSocketId = null;
   const rb = document.getElementById('btn-report');
   if (rb) rb.style.display = 'none';
-
   stopMedia();
   stopTimer();
   clearMessages();

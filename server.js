@@ -447,29 +447,6 @@ function forwardToPartner(socket, event, data) {
 }
 
 // ── Socket connections ──
-// ═══════════════════════════════════════════════════════
-//  KEEP IN TOUCH (KIT)
-// ═══════════════════════════════════════════════════════
-const kitCodes   = new Map();  // code → { socketAId, socketBId, expiresAt }
-const kitPending = new Map();  // socketId → partnerId (one side requested, waiting)
-
-const KIT_EXPIRY = 48 * 60 * 60 * 1000;  // 48h
-
-function generateKITCode() {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let code = '';
-  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
-  return kitCodes.has(code) ? generateKITCode() : code;
-}
-
-// Clean expired codes every hour
-setInterval(() => {
-  const now = Date.now();
-  for (const [code, data] of kitCodes.entries()) {
-    if (now > data.expiresAt) kitCodes.delete(code);
-  }
-}, 60 * 60 * 1000);
-
 io.on('connection', async (socket) => {
   const ip = getIPFromSocket(socket);
   socketIPMap.set(socket.id, ip);
@@ -511,81 +488,15 @@ io.on('connection', async (socket) => {
     tryMatch(socket, [], room || '');
   });
 
-  socket.on('stop', () => { disconnect(socket); socket.emit('stopped'); broadcastStats(); });
+  socket.on('stop',       () => { disconnect(socket); socket.emit('stopped'); broadcastStats(); });
+  socket.on('disconnect', () => { disconnect(socket); socketIPMap.delete(socket.id); });
+
+  socket.on('webrtc_offer',         (data) => forwardToPartner(socket, 'webrtc_offer', data));
+  socket.on('webrtc_answer',        (data) => forwardToPartner(socket, 'webrtc_answer', data));
+  socket.on('webrtc_ice_candidate', (data) => forwardToPartner(socket, 'webrtc_ice_candidate', data));
+  socket.on('webrtc_video_toggle',  (data) => forwardToPartner(socket, 'webrtc_video_toggle', data));
+  socket.on('webrtc_audio_toggle',  (data) => forwardToPartner(socket, 'webrtc_audio_toggle', data));
   socket.on('webrtc_screen_share',  (data) => forwardToPartner(socket, 'webrtc_screen_share', data));
-  socket.on('webrtc_a_ready',       ()     => forwardToPartner(socket, 'webrtc_a_ready', {}));
-  socket.on('webrtc_b_ready',       ()     => forwardToPartner(socket, 'webrtc_b_ready', {}));
-
-  // ── Keep in Touch ──
-  socket.on('kit_request', () => {
-    const partnerId = pairs.get(socket.id);
-    if (!partnerId) return;
-    const partnerSocket = io.sockets.sockets.get(partnerId);
-    if (!partnerSocket) return;
-
-    // Check if partner already requested
-    if (kitPending.has(partnerId) && kitPending.get(partnerId) === socket.id) {
-      // Both requested → generate code
-      kitPending.delete(partnerId);
-      kitPending.delete(socket.id);
-      const code = generateKITCode();
-      kitCodes.set(code, {
-        socketAId: socket.id,
-        socketBId: partnerId,
-        expiresAt: Date.now() + KIT_EXPIRY
-      });
-      socket.emit('kit_matched', { code });
-      partnerSocket.emit('kit_matched', { code });
-    } else {
-      // First to request — mark as pending
-      kitPending.set(socket.id, partnerId);
-      socket.emit('kit_pending');
-      partnerSocket.emit('kit_stranger_requested');
-    }
-  });
-
-  socket.on('kit_cancel', () => {
-    kitPending.delete(socket.id);
-    const partnerId = pairs.get(socket.id);
-    if (partnerId) {
-      const ps = io.sockets.sockets.get(partnerId);
-      if (ps) ps.emit('kit_cancelled');
-    }
-  });
-
-  socket.on('kit_reconnect', ({ code } = {}) => {
-    if (!code) return socket.emit('kit_error', { message: 'Invalid code.' });
-    const upper = code.toUpperCase().trim();
-    const entry = kitCodes.get(upper);
-
-    if (!entry) {
-      return socket.emit('kit_error', { message: 'Code not found or expired.' });
-    }
-    if (Date.now() > entry.expiresAt) {
-      kitCodes.delete(upper);
-      return socket.emit('kit_error', { message: 'This code has expired.' });
-    }
-
-    // Find the other socket
-    const otherSocketId = entry.socketAId === socket.id ? entry.socketBId : entry.socketAId;
-    const otherSocket   = io.sockets.sockets.get(otherSocketId);
-
-    if (!otherSocket) {
-      kitCodes.delete(upper);
-      return socket.emit('kit_error', { message: 'The other person is no longer online.' });
-    }
-
-    // Both are online — match them directly
-    kitCodes.delete(upper);
-    doMatch({ socket, interests: [], room: '' }, { socket: otherSocket, interests: [], room: '' });
-    socket.emit('kit_reconnect_ok', { strangerSocketId: otherSocketId });
-  });
-
-  socket.on('disconnect', () => {
-    kitPending.delete(socket.id);
-    disconnect(socket);
-    socketIPMap.delete(socket.id);
-  });
 });
 
 const PORT = process.env.PORT || 3443;
