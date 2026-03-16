@@ -1074,16 +1074,11 @@ socket.on('matched', async ({ role, common, strangerSocketId }) => {
     await initMedia();
 
     if (role === 'A') {
-      // A signals it's ready — waits for B to confirm back
+      // A signals it's ready — B will respond with webrtc_b_ready
       socket.emit('webrtc_a_ready');
       console.log('✅ A is ready — waiting for B');
-    } else {
-      // B creates PC, adds tracks, signals A
-      await createPeerConnection();
-      if (localStream) localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
-      socket.emit('webrtc_b_ready');
-      console.log('✅ B is ready — signaled A');
     }
+    // B does nothing here — waits for webrtc_a_ready from A
   }
 });
 
