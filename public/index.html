@@ -358,56 +358,71 @@
       }
       #home-screen .home-inner { display: none !important; }
 
+      /* Col gauche : hero — largeur fixe, pas flex:1 */
       .col-left {
         display: flex !important;
-        flex: 1;
+        width: 42%;
+        min-width: 320px;
+        flex-shrink: 0;
         flex-direction: column;
         align-items: flex-start;
         justify-content: center;
-        padding: 60px 64px;
-        border-right: 1px solid var(--border);
+        padding: 60px 56px 60px 64px;
         position: relative;
-        overflow: hidden;
         gap: 28px;
       }
+      /* Trait violet — sur l'élément parent, pas overflow:hidden */
       .col-left::before {
         content: '';
         position: absolute; top: 0; left: 0;
         width: 3px; height: 100%;
-        background: linear-gradient(to bottom, transparent, var(--accent), transparent);
-        opacity: 0.45;
+        background: linear-gradient(to bottom, transparent, var(--accent) 40%, var(--accent) 60%, transparent);
+        opacity: 0.6;
+        z-index: 2;
       }
+      /* Séparateur droit */
       .col-left::after {
         content: '';
-        position: absolute; top: 50%; left: 35%;
-        transform: translate(-50%, -50%);
-        width: 600px; height: 600px;
-        background: radial-gradient(circle, rgba(124,106,247,0.06) 0%, transparent 65%);
-        pointer-events: none;
+        position: absolute; top: 0; right: 0;
+        width: 1px; height: 100%;
+        background: var(--border);
       }
-      .col-left .hero { text-align: left; max-width: none; }
-      .col-left .hero h1 { font-size: clamp(2.6rem, 3.8vw, 4.4rem); }
-      .col-left .hero p { font-size: 0.88rem; max-width: 400px; }
-      .col-left .col-stats { display: flex !important; }
+      /* Glow d'ambiance via box-shadow interne */
+      .col-left-glow {
+        position: absolute; top: 50%; left: 40%;
+        transform: translate(-50%, -50%);
+        width: 500px; height: 500px;
+        background: radial-gradient(circle, rgba(124,106,247,0.07) 0%, transparent 65%);
+        pointer-events: none; z-index: 0;
+      }
+      .col-left .hero { text-align: left; max-width: none; position: relative; z-index: 1; }
+      .col-left .hero h1 { font-size: clamp(2.4rem, 3.2vw, 4rem); }
+      .col-left .hero p { font-size: 0.85rem; max-width: 380px; }
+      .col-left .col-stats { display: flex !important; position: relative; z-index: 1; }
 
+      /* Col droite : scrollable, prend le reste */
       .col-right {
         display: flex !important;
-        width: 460px;
-        flex-shrink: 0;
+        flex: 1;
         flex-direction: column;
-        justify-content: center;
+        justify-content: flex-start;
         overflow-y: auto;
-        padding: 40px 44px;
-        gap: 18px;
+        padding: 0 48px;
+        gap: 16px;
       }
+      /* Centre verticalement le contenu si assez de place */
+      .col-right > * { flex-shrink: 0; }
       .col-right::-webkit-scrollbar { width: 3px; }
       .col-right::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 2px; }
       .col-right .rooms-wrap { max-width: 100%; align-items: flex-start; }
+      .col-right .rooms-grid { grid-template-columns: repeat(3, 1fr); }
       .col-right .interests-wrap { max-width: 100%; align-items: flex-start; }
       .col-right .kit-home-wrap { max-width: 100%; }
       .col-right .btn-start { width: 100%; }
       .col-right .disclaimer { text-align: left; }
       .col-right .tags-list { justify-content: flex-start; }
+      /* Spacer auto pour centrer verticalement */
+      .col-right-spacer { flex: 1; min-height: 0; }
     }
 
     @media (max-width: 700px) {
@@ -461,6 +476,7 @@
 
     <!-- ══ COLONNE GAUCHE — desktop only ══ -->
     <div class="col-left">
+      <div class="col-left-glow"></div>
       <div class="hero">
         <h1>Talk to<br/><em>strangers.</em></h1>
         <p>Anonymous, instant, ephemeral.<br/>No account. No trace. Just a conversation.</p>
@@ -473,6 +489,7 @@
 
     <!-- ══ COLONNE DROITE — desktop only ══ -->
     <div class="col-right">
+      <div style="flex:1;min-height:20px"></div>
       <div class="mode-selector">
         <button class="mode-btn selected" id="mode-text-d" onclick="selectMode('text')"><i class="fa-solid fa-comment"></i> Text only</button>
         <button class="mode-btn" id="mode-video-d" onclick="selectMode('video')"><i class="fa-solid fa-video"></i> Video + Text</button>
@@ -528,9 +545,8 @@
       </div>
 
       <p class="disclaimer">By using this app you agree to be respectful. Conversations are not stored.</p>
+      <div style="flex:1;min-height:20px"></div>
     </div>
-
-    <!-- ══ MOBILE : home-inner original intact ══ -->
     <div class="home-inner">
       <div class="hero">
         <h1>Talk to<br/><em>strangers.</em></h1>
