@@ -405,29 +405,6 @@ setInterval(() => {
 }, 60 * 60 * 1000);
 
 // ── Socket connections ──
-
-// ═══════════════════════════════════════════
-//  KEEP IN TOUCH (KIT)
-// ═══════════════════════════════════════════
-// const kitCodes   = new Map(); // code → { socketAId, socketBId, expiresAt }
-// const kitPending = new Map(); // socketId → partnerId (one side requested)
-// const KIT_EXPIRY = 48 * 60 * 60 * 1000; // 48h
-
-// function generateKITCode() {
-//   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-//   let code = '';
-//   for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
-//   return kitCodes.has(code) ? generateKITCode() : code;
-// }
-
-// // Clean expired codes every hour
-// setInterval(() => {
-//   const now = Date.now();
-//   for (const [code, data] of kitCodes.entries()) {
-//     if (now > data.expiresAt) kitCodes.delete(code);
-//   }
-// }, 60 * 60 * 1000);
-
 io.on('connection', async (socket) => {
   const ip = getIPFromSocket(socket);
   socketIPMap.set(socket.id, ip);
