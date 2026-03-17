@@ -93,7 +93,7 @@
     .tag-remove { cursor: pointer; opacity: 0.6; font-size: 0.8rem; line-height: 1; }
     .tag-remove:hover { opacity: 1; color: var(--danger); }
 
-    /* ── Keep in Touch — home reconnect ── */
+    /* Keep in Touch — home reconnect */
     .kit-home-wrap {
       display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 360px;
       padding: 14px 16px; background: var(--surface);
@@ -124,7 +124,7 @@
     .kit-home-btn:hover { background: var(--green); color: #0a0a0f; }
     .kit-home-error { font-size: 0.62rem; color: var(--danger); min-height: 14px; }
 
-    /* ── Topic Rooms ── */
+    /* Topic Rooms */
     .rooms-wrap { display: flex; flex-direction: column; gap: 8px; align-items: center; width: 100%; max-width: 400px; }
     .rooms-label { font-size: 0.68rem; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; width: 100%; text-align: left; }
     .rooms-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: 100%; }
@@ -217,7 +217,7 @@
     .btn-report { background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 7px 14px; font-size: 0.75rem; font-family: 'DM Mono', monospace; border-radius: 2px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
     .btn-report:hover { background: var(--danger); color: #fff; }
 
-    /* ── Keep in Touch button in chat ── */
+    /* Keep in Touch button in chat */
     .btn-kit {
       background: transparent; border: 1px solid rgba(74,222,128,0.4); color: var(--green);
       padding: 5px 12px; font-family: 'DM Mono', monospace; font-size: 0.68rem;
@@ -228,7 +228,7 @@
     .btn-kit.pending { opacity: 0.55; cursor: default; border-style: dashed; }
     .btn-kit.done { background: rgba(74,222,128,0.1); border-color: var(--green); cursor: default; }
 
-    /* ── Keep in Touch overlay ── */
+    /* Keep in Touch overlay */
     #kit-overlay {
       position: fixed; inset: 0; z-index: 1000;
       background: rgba(10,10,15,0.85); backdrop-filter: blur(10px);
@@ -252,11 +252,7 @@
     .kit-title span { color: var(--green); }
     .kit-subtitle { font-size: 0.72rem; color: var(--muted); text-align: center; line-height: 1.6; margin-top: -6px; }
 
-    /* Code display */
-    .kit-code {
-      display: flex; align-items: center; gap: 5px;
-      justify-content: center; width: 100%;
-    }
+    .kit-code { display: flex; align-items: center; gap: 5px; justify-content: center; width: 100%; }
     .kit-code-char {
       width: 40px; height: 50px; background: var(--bg);
       border: 1.5px solid var(--accent); border-radius: 8px;
@@ -284,8 +280,6 @@
     .kit-divider { width: 100%; border: none; border-top: 1px solid var(--border); margin: 0; }
     .kit-close { background: transparent; border: 1px solid var(--border-light); color: var(--muted); padding: 8px 0; font-family: 'DM Mono', monospace; font-size: 0.7rem; cursor: pointer; border-radius: 4px; transition: all 0.18s; align-self: stretch; text-align: center; }
     .kit-close:hover { border-color: var(--text); color: var(--text); }
-
-    /* Spinner inside kit */
     .kit-spinner { width: 36px; height: 36px; border: 2px solid var(--border); border-top-color: var(--green); border-radius: 50%; animation: spin 0.8s linear infinite; }
 
     /* Messages */
@@ -351,6 +345,71 @@
     :root:not(.light) .mode-btn { color: #ffffff; }
     :root:not(.light) .interests-label { color: #ffffff; }
 
+    /* ══════════════════════════════════════════
+       DESKTOP SPLIT SCREEN (≥ 768px)
+       ══════════════════════════════════════════ */
+    .col-left, .col-right { display: none; }
+
+    @media (min-width: 768px) {
+      #home-screen {
+        flex-direction: row !important;
+        align-items: stretch !important;
+        overflow: hidden !important;
+      }
+      #home-screen .home-inner { display: none !important; }
+
+      .col-left {
+        display: flex !important;
+        flex: 1;
+        flex-direction: column;
+        align-items: flex-start;
+        justify-content: center;
+        padding: 60px 64px;
+        border-right: 1px solid var(--border);
+        position: relative;
+        overflow: hidden;
+        gap: 28px;
+      }
+      .col-left::before {
+        content: '';
+        position: absolute; top: 0; left: 0;
+        width: 3px; height: 100%;
+        background: linear-gradient(to bottom, transparent, var(--accent), transparent);
+        opacity: 0.45;
+      }
+      .col-left::after {
+        content: '';
+        position: absolute; top: 50%; left: 35%;
+        transform: translate(-50%, -50%);
+        width: 600px; height: 600px;
+        background: radial-gradient(circle, rgba(124,106,247,0.06) 0%, transparent 65%);
+        pointer-events: none;
+      }
+      .col-left .hero { text-align: left; max-width: none; }
+      .col-left .hero h1 { font-size: clamp(2.6rem, 3.8vw, 4.4rem); }
+      .col-left .hero p { font-size: 0.88rem; max-width: 400px; }
+      .col-left .col-stats { display: flex !important; }
+
+      .col-right {
+        display: flex !important;
+        width: 460px;
+        flex-shrink: 0;
+        flex-direction: column;
+        justify-content: center;
+        overflow-y: auto;
+        padding: 40px 44px;
+        gap: 18px;
+      }
+      .col-right::-webkit-scrollbar { width: 3px; }
+      .col-right::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 2px; }
+      .col-right .rooms-wrap { max-width: 100%; align-items: flex-start; }
+      .col-right .interests-wrap { max-width: 100%; align-items: flex-start; }
+      .col-right .kit-home-wrap { max-width: 100%; }
+      .col-right .btn-start { width: 100%; }
+      .col-right .disclaimer { text-align: left; }
+      .col-right .tags-list { justify-content: flex-start; }
+    }
+
     @media (max-width: 700px) {
       .stats { display: none; }
       #chat-screen.active { flex-direction: column; }
@@ -399,70 +458,142 @@
 
   <!-- HOME -->
   <div id="home-screen" class="screen active">
-  <div class="home-inner">
-    <div class="hero">
-      <h1>Talk to<br/><em>strangers.</em></h1>
-      <p>Anonymous, instant, ephemeral.<br/>No account. No trace. Just a conversation.</p>
-    </div>
 
-    <div class="mode-selector">
-      <button class="mode-btn selected" id="mode-text" onclick="selectMode('text')"><i class="fa-solid fa-comment"></i> Text only</button>
-      <button class="mode-btn" id="mode-video" onclick="selectMode('video')"><i class="fa-solid fa-video"></i> Video + Text</button>
-    </div>
-
-    <!-- Topic Rooms -->
-    <div class="rooms-wrap">
-      <div class="rooms-label">Choose a room <span style="opacity:0.4">(optional)</span></div>
-      <div class="rooms-grid">
-        <button class="room-btn" data-room="gaming" onclick="selectRoom('gaming',this)">
-          <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="6" width="20" height="12" rx="4" stroke-width="1.8"/><path d="M7 12h4M9 10v4" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.5" cy="11" r="1"/><circle cx="17.5" cy="13" r="1"/></svg>Gaming
-        </button>
-        <button class="room-btn" data-room="music" onclick="selectRoom('music',this)">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M9 18V5l12-2v13" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" stroke-width="1.8"/><circle cx="18" cy="16" r="3" stroke-width="1.8"/></svg>Music
-        </button>
-        <button class="room-btn" data-room="coding" onclick="selectRoom('coding',this)">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M14 4l-4 16" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Coding
-        </button>
-        <button class="room-btn" data-room="movies" onclick="selectRoom('movies',this)">
-          <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="7" width="20" height="14" rx="2" stroke-width="1.8"/><path d="M2 11h20M7 7V3M17 7V3M2 7l5-4M9 7l5-4M16 7l5-4" stroke-width="1.8" stroke-linecap="round"/></svg>Movies
-        </button>
-        <button class="room-btn" data-room="languages" onclick="selectRoom('languages',this)">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 9h8M8 13h5" stroke-width="1.8" stroke-linecap="round"/></svg>Languages
-        </button>
-        <button class="room-btn" data-room="vibing" onclick="selectRoom('vibing',this)">
-          <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke-width="1.8"/><path d="M8 13s1.5 2 4 2 4-2 4-2" stroke-width="1.8" stroke-linecap="round"/><path d="M9 9h.01M15 9h.01" stroke-width="2.5" stroke-linecap="round"/></svg>Vibing
-        </button>
-        <button class="room-btn room-random selected" id="room-random" data-room="" onclick="selectRoom('',this)">
-          <svg viewBox="0 0 24 24" fill="none"><path d="M16 3h5v5M4 20l16.2-16.2M21 16v5h-5M15 15l5.1 5.1M4 4l5 5" stroke-width="1.8" stroke-linecap="round"/></svg>Random — no filter
-        </button>
+    <!-- ══ COLONNE GAUCHE — desktop only ══ -->
+    <div class="col-left">
+      <div class="hero">
+        <h1>Talk to<br/><em>strangers.</em></h1>
+        <p>Anonymous, instant, ephemeral.<br/>No account. No trace. Just a conversation.</p>
+      </div>
+      <div class="col-stats stats" style="display:none;">
+        <div class="stat-item"><span class="dot green pulse"></span><span id="stat-online-left">0</span> online</div>
+        <div class="stat-item"><span class="dot"></span><span id="stat-chatting-left">0</span> chatting</div>
       </div>
     </div>
 
-    <button class="btn-start" onclick="startChat()"><i class="fa-solid fa-arrow-right-long"></i> Start chatting</button>
-
-    <div class="interests-wrap">
-      <div class="interests-label">Interests (optional)</div>
-      <div class="interests-input-row">
-        <input id="interests-input" type="text" placeholder="e.g. music, gaming, travel..." maxlength="30"/>
-        <button class="btn-add-tag" onclick="addTag()"><i class="fa-solid fa-plus"></i> Add</button>
+    <!-- ══ COLONNE DROITE — desktop only ══ -->
+    <div class="col-right">
+      <div class="mode-selector">
+        <button class="mode-btn selected" id="mode-text-d" onclick="selectMode('text')"><i class="fa-solid fa-comment"></i> Text only</button>
+        <button class="mode-btn" id="mode-video-d" onclick="selectMode('video')"><i class="fa-solid fa-video"></i> Video + Text</button>
       </div>
-      <div class="tags-list" id="tags-list"></div>
+
+      <div class="rooms-wrap">
+        <div class="rooms-label">Choose a room <span style="opacity:0.4">(optional)</span></div>
+        <div class="rooms-grid">
+          <button class="room-btn" data-room="gaming" onclick="selectRoom('gaming',this)">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="6" width="20" height="12" rx="4" stroke-width="1.8"/><path d="M7 12h4M9 10v4" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.5" cy="11" r="1"/><circle cx="17.5" cy="13" r="1"/></svg>Gaming
+          </button>
+          <button class="room-btn" data-room="music" onclick="selectRoom('music',this)">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M9 18V5l12-2v13" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" stroke-width="1.8"/><circle cx="18" cy="16" r="3" stroke-width="1.8"/></svg>Music
+          </button>
+          <button class="room-btn" data-room="coding" onclick="selectRoom('coding',this)">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M14 4l-4 16" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Coding
+          </button>
+          <button class="room-btn" data-room="movies" onclick="selectRoom('movies',this)">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="7" width="20" height="14" rx="2" stroke-width="1.8"/><path d="M2 11h20M7 7V3M17 7V3M2 7l5-4M9 7l5-4M16 7l5-4" stroke-width="1.8" stroke-linecap="round"/></svg>Movies
+          </button>
+          <button class="room-btn" data-room="languages" onclick="selectRoom('languages',this)">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 9h8M8 13h5" stroke-width="1.8" stroke-linecap="round"/></svg>Languages
+          </button>
+          <button class="room-btn" data-room="vibing" onclick="selectRoom('vibing',this)">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke-width="1.8"/><path d="M8 13s1.5 2 4 2 4-2 4-2" stroke-width="1.8" stroke-linecap="round"/><path d="M9 9h.01M15 9h.01" stroke-width="2.5" stroke-linecap="round"/></svg>Vibing
+          </button>
+          <button class="room-btn room-random selected" id="room-random-d" data-room="" onclick="selectRoom('',this)">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M16 3h5v5M4 20l16.2-16.2M21 16v5h-5M15 15l5.1 5.1M4 4l5 5" stroke-width="1.8" stroke-linecap="round"/></svg>Random — no filter
+          </button>
+        </div>
+      </div>
+
+      <button class="btn-start" onclick="startChat()"><i class="fa-solid fa-arrow-right-long"></i> Start chatting</button>
+
+      <div class="interests-wrap">
+        <div class="interests-label">Interests (optional)</div>
+        <div class="interests-input-row">
+          <input id="interests-input-d" type="text" placeholder="e.g. music, gaming, travel..." maxlength="30"/>
+          <button class="btn-add-tag" onclick="addTagDesktop()"><i class="fa-solid fa-plus"></i> Add</button>
+        </div>
+        <div class="tags-list" id="tags-list-d"></div>
+      </div>
+
+      <div class="kit-home-wrap">
+        <div class="kit-home-label">Reconnect with a stranger</div>
+        <div class="kit-home-row">
+          <input id="kit-home-input-d" type="text" placeholder="Enter your code" maxlength="6"
+            oninput="this.value=this.value.toUpperCase()"
+            onkeydown="if(event.key==='Enter')useKITCodeFromHomeDesktop()"/>
+          <button class="kit-home-btn" onclick="useKITCodeFromHomeDesktop()"><i class="fa-solid fa-arrow-right-long"></i> Go</button>
+        </div>
+        <div class="kit-home-error" id="kit-home-error-d"></div>
+      </div>
+
+      <p class="disclaimer">By using this app you agree to be respectful. Conversations are not stored.</p>
     </div>
 
-    <!-- Keep in Touch — reconnect -->
-    <div class="kit-home-wrap">
-      <div class="kit-home-label">Reconnect with a stranger</div>
-      <div class="kit-home-row">
-        <input id="kit-home-input" type="text" placeholder="Enter your code" maxlength="6"
-          oninput="this.value=this.value.toUpperCase()"
-          onkeydown="if(event.key==='Enter')useKITCodeFromHome()"/>
-        <button class="kit-home-btn" onclick="useKITCodeFromHome()"><i class="fa-solid fa-arrow-right-long"></i> Go</button>
+    <!-- ══ MOBILE : home-inner original intact ══ -->
+    <div class="home-inner">
+      <div class="hero">
+        <h1>Talk to<br/><em>strangers.</em></h1>
+        <p>Anonymous, instant, ephemeral.<br/>No account. No trace. Just a conversation.</p>
       </div>
-      <div class="kit-home-error" id="kit-home-error"></div>
-    </div>
 
-    <p class="disclaimer">By using this app you agree to be respectful. Conversations are not stored.</p>
-  </div><!-- end home-inner -->
+      <div class="mode-selector">
+        <button class="mode-btn selected" id="mode-text" onclick="selectMode('text')"><i class="fa-solid fa-comment"></i> Text only</button>
+        <button class="mode-btn" id="mode-video" onclick="selectMode('video')"><i class="fa-solid fa-video"></i> Video + Text</button>
+      </div>
+
+      <div class="rooms-wrap">
+        <div class="rooms-label">Choose a room <span style="opacity:0.4">(optional)</span></div>
+        <div class="rooms-grid">
+          <button class="room-btn" data-room="gaming" onclick="selectRoom('gaming',this)">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="6" width="20" height="12" rx="4" stroke-width="1.8"/><path d="M7 12h4M9 10v4" stroke-width="1.8" stroke-linecap="round"/><circle cx="15.5" cy="11" r="1"/><circle cx="17.5" cy="13" r="1"/></svg>Gaming
+          </button>
+          <button class="room-btn" data-room="music" onclick="selectRoom('music',this)">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M9 18V5l12-2v13" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="18" r="3" stroke-width="1.8"/><circle cx="18" cy="16" r="3" stroke-width="1.8"/></svg>Music
+          </button>
+          <button class="room-btn" data-room="coding" onclick="selectRoom('coding',this)">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M8 9l-4 3 4 3M16 9l4 3-4 3M14 4l-4 16" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>Coding
+          </button>
+          <button class="room-btn" data-room="movies" onclick="selectRoom('movies',this)">
+            <svg viewBox="0 0 24 24" fill="none"><rect x="2" y="7" width="20" height="14" rx="2" stroke-width="1.8"/><path d="M2 11h20M7 7V3M17 7V3M2 7l5-4M9 7l5-4M16 7l5-4" stroke-width="1.8" stroke-linecap="round"/></svg>Movies
+          </button>
+          <button class="room-btn" data-room="languages" onclick="selectRoom('languages',this)">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke-width="1.8" stroke-linejoin="round"/><path d="M8 9h8M8 13h5" stroke-width="1.8" stroke-linecap="round"/></svg>Languages
+          </button>
+          <button class="room-btn" data-room="vibing" onclick="selectRoom('vibing',this)">
+            <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke-width="1.8"/><path d="M8 13s1.5 2 4 2 4-2 4-2" stroke-width="1.8" stroke-linecap="round"/><path d="M9 9h.01M15 9h.01" stroke-width="2.5" stroke-linecap="round"/></svg>Vibing
+          </button>
+          <button class="room-btn room-random selected" id="room-random" data-room="" onclick="selectRoom('',this)">
+            <svg viewBox="0 0 24 24" fill="none"><path d="M16 3h5v5M4 20l16.2-16.2M21 16v5h-5M15 15l5.1 5.1M4 4l5 5" stroke-width="1.8" stroke-linecap="round"/></svg>Random — no filter
+          </button>
+        </div>
+      </div>
+
+      <button class="btn-start" onclick="startChat()"><i class="fa-solid fa-arrow-right-long"></i> Start chatting</button>
+
+      <div class="interests-wrap">
+        <div class="interests-label">Interests (optional)</div>
+        <div class="interests-input-row">
+          <input id="interests-input" type="text" placeholder="e.g. music, gaming, travel..." maxlength="30"/>
+          <button class="btn-add-tag" onclick="addTag()"><i class="fa-solid fa-plus"></i> Add</button>
+        </div>
+        <div class="tags-list" id="tags-list"></div>
+      </div>
+
+      <div class="kit-home-wrap">
+        <div class="kit-home-label">Reconnect with a stranger</div>
+        <div class="kit-home-row">
+          <input id="kit-home-input" type="text" placeholder="Enter your code" maxlength="6"
+            oninput="this.value=this.value.toUpperCase()"
+            onkeydown="if(event.key==='Enter')useKITCodeFromHome()"/>
+          <button class="kit-home-btn" onclick="useKITCodeFromHome()"><i class="fa-solid fa-arrow-right-long"></i> Go</button>
+        </div>
+        <div class="kit-home-error" id="kit-home-error"></div>
+      </div>
+
+      <p class="disclaimer">By using this app you agree to be respectful. Conversations are not stored.</p>
+    </div><!-- end home-inner -->
+
   </div>
 
   <!-- WAITING -->
@@ -559,8 +690,6 @@
   <!-- Keep in Touch Overlay -->
   <div id="kit-overlay">
     <div class="kit-card">
-
-      <!-- STATE: waiting for stranger to accept -->
       <div id="kit-state-waiting" style="display:none;flex-direction:column;align-items:center;gap:16px;width:100%">
         <div class="kit-eyebrow">keep in touch</div>
         <div class="kit-title">Waiting for<br/><span>stranger</span></div>
@@ -568,8 +697,6 @@
         <div class="kit-spinner"></div>
         <button class="kit-close" onclick="cancelKIT()">Cancel</button>
       </div>
-
-      <!-- STATE: code revealed -->
       <div id="kit-state-code" style="display:none;flex-direction:column;align-items:center;gap:16px;width:100%">
         <div class="kit-eyebrow">keep in touch</div>
         <div class="kit-title">Your<br/><span>code</span></div>
@@ -580,8 +707,6 @@
         <hr class="kit-divider"/>
         <button class="kit-close" onclick="hideKIT()">Done</button>
       </div>
-
-      <!-- STATE: reconnect (enter code) -->
       <div id="kit-state-reconnect" style="display:none;flex-direction:column;align-items:center;gap:16px;width:100%">
         <div class="kit-eyebrow">keep in touch</div>
         <div class="kit-title">Enter your<br/><span>code</span></div>
@@ -596,7 +721,6 @@
         <div id="kit-reconnect-error" style="font-size:0.65rem;color:var(--danger);min-height:16px;text-align:center"></div>
         <button class="kit-close" onclick="hideKIT()">Cancel</button>
       </div>
-
     </div>
   </div>
 
@@ -630,12 +754,21 @@ async function getIceServers() { if (!ICE_SERVERS) await turnCredentialsPromise;
 
 function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
 function goHome() { stopMedia(); showScreen('home-screen'); }
-function selectMode(m) { chatMode = m; document.getElementById('mode-text').classList.toggle('selected', m==='text'); document.getElementById('mode-video').classList.toggle('selected', m==='video'); }
+
+function selectMode(m) {
+  chatMode = m;
+  ['mode-text','mode-text-d'].forEach(id => { const el = document.getElementById(id); if(el) el.classList.toggle('selected', m==='text'); });
+  ['mode-video','mode-video-d'].forEach(id => { const el = document.getElementById(id); if(el) el.classList.toggle('selected', m==='video'); });
+}
+
 function selectRoom(room, el) {
   selectedRoom = room;
   document.querySelectorAll('.room-btn').forEach(b => b.classList.remove('selected'));
-  el.classList.add('selected');
-  if (room !== '') document.getElementById('room-random').classList.remove('selected');
+  document.querySelectorAll(`.room-btn[data-room="${room}"]`).forEach(b => b.classList.add('selected'));
+  if (room !== '') {
+    const rr = document.getElementById('room-random'); if(rr) rr.classList.remove('selected');
+    const rrd = document.getElementById('room-random-d'); if(rrd) rrd.classList.remove('selected');
+  }
 }
 
 socket.on('banned', () => {
@@ -645,13 +778,22 @@ socket.on('banned', () => {
   d.innerHTML = '<div style="font-size:3rem;">🚫</div><div style="font-family:Syne,sans-serif;font-size:1.4rem;font-weight:800;color:var(--danger);">You have been banned</div><div style="font-size:0.82rem;color:var(--muted);max-width:320px;line-height:1.6;">Your IP address has been banned for violating our terms of service.</div>';
   document.getElementById('app').appendChild(d);
 });
-socket.on('stats', ({ online, chatting }) => { document.getElementById('stat-online').textContent = online; document.getElementById('stat-chatting').textContent = chatting; });
+
+socket.on('stats', ({ online, chatting }) => {
+  ['stat-online','stat-online-left'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = online; });
+  ['stat-chatting','stat-chatting-left'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = chatting; });
+});
 
 let userTags = [];
-function addTag() { const i = document.getElementById('interests-input'); const v = i.value.trim().toLowerCase(); if (!v || userTags.includes(v) || userTags.length >= 5) { i.value = ''; return; } userTags.push(v); renderTags(); i.value = ''; i.focus(); }
-function removeTag(t) { userTags = userTags.filter(x => x !== t); renderTags(); }
+function addTag() { const i = document.getElementById('interests-input'); const v = i.value.trim().toLowerCase(); if (!v || userTags.includes(v) || userTags.length >= 5) { i.value = ''; return; } userTags.push(v); renderTags(); renderTagsDesktop(); i.value = ''; i.focus(); }
+function removeTag(t) { userTags = userTags.filter(x => x !== t); renderTags(); renderTagsDesktop(); }
 function renderTags() { document.getElementById('tags-list').innerHTML = userTags.map(t => `<span class="tag">${t}<span class="tag-remove" onclick="removeTag('${t}')">✕</span></span>`).join(''); }
 document.getElementById('interests-input').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addTag(); } });
+
+function addTagDesktop() { const i = document.getElementById('interests-input-d'); const v = i.value.trim().toLowerCase(); if (!v || userTags.includes(v) || userTags.length >= 5) { i.value = ''; return; } userTags.push(v); renderTags(); renderTagsDesktop(); i.value = ''; i.focus(); }
+function removeTagDesktop(t) { userTags = userTags.filter(x => x !== t); renderTags(); renderTagsDesktop(); }
+function renderTagsDesktop() { const el = document.getElementById('tags-list-d'); if(el) el.innerHTML = userTags.map(t => `<span class="tag">${t}<span class="tag-remove" onclick="removeTagDesktop('${t}')">✕</span></span>`).join(''); }
+document.getElementById('interests-input-d').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addTagDesktop(); } });
 
 function startChat() { showScreen('waiting-screen'); socket.emit('find_partner', { interests: userTags, room: selectedRoom }); }
 function cancelSearch() { socket.emit('stop'); goHome(); }
@@ -665,11 +807,9 @@ socket.on('matched', async ({ role, common, strangerSocketId }) => {
   window.currentStrangerSocketId = strangerSocketId;
   const rb = document.getElementById('btn-report');
   if (rb) { rb.style.display = 'inline-flex'; rb.disabled = false; rb.innerHTML = '<i class="fa-solid fa-flag"></i> Report'; }
-  // Show KIT button, reset state
   kitRequestSent = false; currentKITCode = null;
   const kb = document.getElementById('btn-kit');
   if (kb) { kb.style.display = 'inline-flex'; kb.className = 'btn-kit'; kb.innerHTML = '<i class="fa-solid fa-link"></i> Keep in touch'; }
-
   myRole = role;
   clearMessages();
   const banner = document.getElementById('common-banner');
@@ -718,7 +858,6 @@ const msgInput = document.getElementById('msg-input');
 msgInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
 msgInput.addEventListener('input', () => { const h = msgInput.value.length > 0; if (h && !isTyping) { isTyping = true; socket.emit('typing', true); } if (!h && isTyping) { isTyping = false; socket.emit('typing', false); } });
 
-// ── WebRTC ──
 let wakeLock = null;
 async function acquireWakeLock() { try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch(e) {} }
 async function releaseWakeLock() { if (wakeLock) { await wakeLock.release(); wakeLock = null; } }
@@ -833,7 +972,6 @@ function cleanup() {
   hideKIT();
 }
 
-// ── Device Picker ──
 async function initDevicePicker() {
   if (isMobile) return;
   const devices = await navigator.mediaDevices.enumerateDevices();
@@ -856,12 +994,10 @@ async function applyDevices() {
   } catch(e) {}
 }
 
-// ── Theme ──
 function applyTheme(t) { const r = document.documentElement; const b = document.getElementById('theme-toggle'); if (t==='light') { r.classList.add('light'); if (b) b.innerHTML='<i class="fa-solid fa-moon"></i> Dark'; } else { r.classList.remove('light'); if (b) b.innerHTML='<i class="fa-solid fa-sun"></i> Light'; } }
 function toggleTheme() { const c = document.documentElement.classList.contains('light') ? 'light' : 'dark'; const n = c==='light' ? 'dark' : 'light'; localStorage.setItem('theme', n); applyTheme(n); }
 applyTheme(localStorage.getItem('theme') || 'dark');
 
-// ── Report ──
 async function reportStranger() {
   if (!window.currentStrangerSocketId) return;
   const reasons = ['Inappropriate behavior','Nudity / Sexual content','Harassment','Spam','Underage'];
@@ -871,7 +1007,6 @@ async function reportStranger() {
   try { const res = await fetch('/api/report', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ reportedSocketId: window.currentStrangerSocketId, reason: fr }) }); const d = await res.json(); if (d.success) { document.getElementById('btn-report').textContent = '✓ Reported'; document.getElementById('btn-report').disabled = true; } } catch(e) {}
 }
 
-// ── Moderation ──
 let moderationInterval = null;
 async function captureAndModerate() {
   if (!window.currentStrangerSocketId) return;
@@ -881,7 +1016,6 @@ async function captureAndModerate() {
 function startModeration() { stopModeration(); moderationInterval = setInterval(captureAndModerate, 15000); setTimeout(captureAndModerate, 5000); }
 function stopModeration() { if (moderationInterval) { clearInterval(moderationInterval); moderationInterval = null; } }
 
-// ── Screen Share ──
 let screenStream = null, isScreenSharing = false;
 async function toggleScreenShare() { if (isScreenSharing) stopScreenShare(); else startScreenShare(); }
 async function startScreenShare() {
@@ -902,13 +1036,9 @@ function stopScreenShare() {
 }
 socket.on('webrtc_screen_share', v => { const b = document.getElementById('screen-share-badge'); if (b) b.style.display = v ? 'block' : 'none'; });
 
-// ── Fullscreen ──
 function toggleFullscreen() { const v = document.getElementById('video-stranger'); if (!document.fullscreenElement) v.requestFullscreen().catch(()=>{}); else document.exitFullscreen(); }
 document.addEventListener('fullscreenchange', () => { const b = document.getElementById('btn-fullscreen'); if (b) b.innerHTML = document.fullscreenElement ? '<i class="fa-solid fa-compress"></i>' : '<i class="fa-solid fa-expand"></i>'; });
 
-// ═══════════════════════════════════════════
-//  KEEP IN TOUCH (KIT)
-// ═══════════════════════════════════════════
 function showKITState(state) {
   ['waiting','code','reconnect'].forEach(s => {
     const el = document.getElementById(`kit-state-${s}`);
@@ -938,7 +1068,6 @@ function cancelKIT() {
 
 function renderKITCode(code) {
   const el = document.getElementById('kit-code-display');
-  // Show as: X X X — X X X
   el.innerHTML = code.split('').map((ch, i) =>
     (i === 3 ? '<span class="kit-code-sep">—</span>' : '') +
     `<div class="kit-code-char">${ch}</div>`
@@ -954,7 +1083,6 @@ function copyKITCode() {
   });
 }
 
-// Server → both matched: code ready
 socket.on('kit_matched', ({ code }) => {
   currentKITCode = code;
   const kb = document.getElementById('btn-kit');
@@ -964,33 +1092,29 @@ socket.on('kit_matched', ({ code }) => {
   showKIT('code');
 });
 
-// Server → stranger asked first
 socket.on('kit_stranger_requested', () => {
   addSystemMessage('💚 Stranger wants to keep in touch — click "Keep in touch" to accept!');
   const kb = document.getElementById('btn-kit');
   if (kb) { kb.style.borderColor = 'var(--green)'; kb.style.color = 'var(--green)'; }
 });
 
-// Server → still waiting (first to request)
 socket.on('kit_pending', () => {
   addSystemMessage('💚 Request sent — waiting for the stranger to accept...');
 });
 
-// Server → error (code invalid/expired/offline)
 socket.on('kit_error', ({ message }) => {
-  document.getElementById('kit-home-error').textContent = message;
-  document.getElementById('kit-reconnect-error').textContent = message;
+  ['kit-home-error','kit-home-error-d','kit-reconnect-error'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.textContent = message;
+  });
   hideKIT();
 });
 
-// Server → reconnect successful, match initiated
 socket.on('kit_reconnect_ok', () => {
   hideKIT();
-  document.getElementById('kit-home-error').textContent = '';
+  ['kit-home-error','kit-home-error-d'].forEach(id => { const el = document.getElementById(id); if(el) el.textContent = ''; });
   showScreen('waiting-screen');
 });
 
-// Home: use code to reconnect
 function useKITCodeFromHome() {
   const code = document.getElementById('kit-home-input').value.trim().toUpperCase();
   const err = document.getElementById('kit-home-error');
@@ -999,7 +1123,14 @@ function useKITCodeFromHome() {
   socket.emit('kit_reconnect', { code });
 }
 
-// From overlay reconnect form
+function useKITCodeFromHomeDesktop() {
+  const code = document.getElementById('kit-home-input-d').value.trim().toUpperCase();
+  const err = document.getElementById('kit-home-error-d');
+  err.textContent = '';
+  if (code.length !== 6) { err.textContent = 'Code must be 6 characters.'; return; }
+  socket.emit('kit_reconnect', { code });
+}
+
 function submitKITReconnect() {
   const code = document.getElementById('kit-reconnect-input').value.trim().toUpperCase();
   const err = document.getElementById('kit-reconnect-error');
@@ -1007,7 +1138,6 @@ function submitKITReconnect() {
   if (code.length !== 6) { err.textContent = 'Code must be 6 characters.'; return; }
   socket.emit('kit_reconnect', { code });
 }
-
 </script>
 </body>
 </html>
