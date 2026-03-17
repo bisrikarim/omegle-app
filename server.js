@@ -113,12 +113,10 @@ app.post('/api/report', async (req, res) => {
     const { reportedSocketId, reason } = req.body;
     const reportedIP = socketIPMap.get(reportedSocketId) || 'unknown';
     if (reportedIP === 'unknown') return res.status(400).json({ error: 'User not found' });
-
     await pool.query(
       'INSERT INTO reports (reported_ip, reporter_ip, reason) VALUES ($1, $2, $3)',
       [reportedIP, reporterIP, reason || 'inappropriate behavior']
     );
-
     const countResult = await pool.query(
       `SELECT COUNT(*) FROM reports WHERE reported_ip = $1 AND created_at > NOW() - INTERVAL '24 hours'`,
       [reportedIP]
@@ -135,7 +133,7 @@ app.post('/api/report', async (req, res) => {
   }
 });
 
-// ── API Moderation Sightengine ──
+// ── API Moderation ──
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024 } });
 
@@ -144,54 +142,35 @@ app.post('/api/moderate', upload.single('image'), async (req, res) => {
     const { strangerSocketId } = req.body;
     const reporterIP = getIP(req);
     if (!req.file) return res.status(400).json({ error: 'No image' });
-
     const SE_USER   = process.env.SIGHTENGINE_USER;
     const SE_SECRET = process.env.SIGHTENGINE_SECRET;
     if (!SE_USER || !SE_SECRET) return res.json({ banned: false });
-
     const boundary = '----FormBoundary' + Math.random().toString(36).slice(2);
     const CRLF = '\r\n';
     const bodyParts = [];
-
     const addField = (name, value) => {
-      bodyParts.push(
-        Buffer.from('--' + boundary + CRLF +
-          'Content-Disposition: form-data; name="' + name + '"' + CRLF + CRLF +
-          value + CRLF)
-      );
+      bodyParts.push(Buffer.from('--' + boundary + CRLF + 'Content-Disposition: form-data; name="' + name + '"' + CRLF + CRLF + value + CRLF));
     };
-
     addField('models', 'nudity');
     addField('api_user', SE_USER);
     addField('api_secret', SE_SECRET);
-
-    bodyParts.push(
-      Buffer.from('--' + boundary + CRLF +
-        'Content-Disposition: form-data; name="media"; filename="frame.jpg"' + CRLF +
-        'Content-Type: image/jpeg' + CRLF + CRLF)
-    );
+    bodyParts.push(Buffer.from('--' + boundary + CRLF + 'Content-Disposition: form-data; name="media"; filename="frame.jpg"' + CRLF + 'Content-Type: image/jpeg' + CRLF + CRLF));
     bodyParts.push(req.file.buffer);
     bodyParts.push(Buffer.from(CRLF + '--' + boundary + '--' + CRLF));
-
     const bodyBuffer = Buffer.concat(bodyParts);
-
     const seRes = await fetch('https://api.sightengine.com/1.0/check.json', {
-      method: 'POST',
-      body: bodyBuffer,
+      method: 'POST', body: bodyBuffer,
       headers: { 'Content-Type': 'multipart/form-data; boundary=' + boundary }
     });
     const seData = await seRes.json();
     const nudity = seData?.nudity || {};
     const score = nudity.raw ?? 0;
     const partialScore = nudity.partial ?? 0;
-
     if (score > 0.5 || partialScore > 0.55) {
       const reportedIP = socketIPMap.get(strangerSocketId) || 'unknown';
       if (reportedIP !== 'unknown') {
-        await pool.query('INSERT INTO reports (reported_ip, reporter_ip, reason) VALUES ($1, $2, $3)',
-          [reportedIP, reporterIP, 'Auto-detected: nudity/sexual content']);
-        await pool.query('INSERT INTO banned_ips (ip, reason) VALUES ($1, $2) ON CONFLICT (ip) DO NOTHING',
-          [reportedIP, 'Auto-banned: nudity detected (score: ' + score.toFixed(2) + ')']);
+        await pool.query('INSERT INTO reports (reported_ip, reporter_ip, reason) VALUES ($1, $2, $3)', [reportedIP, reporterIP, 'Auto-detected: nudity/sexual content']);
+        await pool.query('INSERT INTO banned_ips (ip, reason) VALUES ($1, $2) ON CONFLICT (ip) DO NOTHING', [reportedIP, 'Auto-banned: nudity detected (score: ' + score.toFixed(2) + ')']);
         const s = io.sockets.sockets.get(strangerSocketId);
         if (s) { s.emit('banned'); s.disconnect(true); }
       }
@@ -228,7 +207,6 @@ app.get('/admin/api/stats', adminAuth, async (req, res) => {
       pool.query('SELECT COUNT(*) FROM banned_ips'),
       pool.query(`SELECT COUNT(*) FROM reports WHERE created_at > NOW() - INTERVAL '24 hours'`)
     ]);
-    // Room stats
     const roomStats = {};
     for (const [room, queue] of waitingRooms.entries()) {
       roomStats[room || 'random'] = queue.length;
@@ -245,11 +223,7 @@ app.get('/admin/api/stats', adminAuth, async (req, res) => {
 
 app.get('/admin/api/reports', adminAuth, async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT reported_ip, COUNT(*) as count, MAX(created_at) as last_report,
-             ARRAY_AGG(DISTINCT reason) as reasons
-      FROM reports GROUP BY reported_ip ORDER BY count DESC, last_report DESC
-    `);
+    const result = await pool.query(`SELECT reported_ip, COUNT(*) as count, MAX(created_at) as last_report, ARRAY_AGG(DISTINCT reason) as reasons FROM reports GROUP BY reported_ip ORDER BY count DESC, last_report DESC`);
     res.json(result.rows);
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -264,10 +238,7 @@ app.get('/admin/api/bans', adminAuth, async (req, res) => {
 app.post('/admin/api/ban', adminAuth, async (req, res) => {
   try {
     const { ip, reason } = req.body;
-    await pool.query(
-      'INSERT INTO banned_ips (ip, reason) VALUES ($1, $2) ON CONFLICT (ip) DO UPDATE SET reason=$2, banned_at=NOW()',
-      [ip, reason || 'Manually banned by admin']
-    );
+    await pool.query('INSERT INTO banned_ips (ip, reason) VALUES ($1, $2) ON CONFLICT (ip) DO UPDATE SET reason=$2, banned_at=NOW()', [ip, reason || 'Manually banned by admin']);
     for (const [socketId, socketIP] of socketIPMap.entries()) {
       if (socketIP === ip) {
         const s = io.sockets.sockets.get(socketId);
@@ -312,23 +283,12 @@ if (process.env.NODE_ENV === 'production') {
 const io = new Server(server, { cors: { origin: '*' } });
 
 // ═══════════════════════════════════════════════════════
-//  MATCHING LOGIC — with Topic Rooms support
-//
-//  waitingRooms: Map<room_key, entry[]>
-//  room_key = '' for random, 'gaming', 'music', etc.
-//  Each entry: { socket, interests, room, timer }
-//
-//  Priority order when matching:
-//    1. Same room + common interests
-//    2. Same room (any)
-//    3. Fallback to random queue after ROOM_TIMEOUT ms
+//  MATCHING — Topic Rooms
 // ═══════════════════════════════════════════════════════
-
-const waitingRooms = new Map();   // room => entry[]
-const pairs        = new Map();   // socketId => partnerId
-const ROOM_TIMEOUT = 12000;       // 12s before fallback to random
-
-const VALID_ROOMS = new Set(['gaming', 'music', 'coding', 'movies', 'languages', 'vibing', '']);
+const waitingRooms = new Map();
+const pairs        = new Map();
+const ROOM_TIMEOUT = 12000;
+const VALID_ROOMS  = new Set(['gaming', 'music', 'coding', 'movies', 'languages', 'vibing', '']);
 
 function getQueue(room) {
   const key = VALID_ROOMS.has(room) ? room : '';
@@ -338,11 +298,7 @@ function getQueue(room) {
 
 function broadcastStats() {
   const totalWaiting = [...waitingRooms.values()].reduce((s, q) => s + q.length, 0);
-  io.emit('stats', {
-    online: io.sockets.sockets.size,
-    waiting: totalWaiting,
-    chatting: pairs.size / 2
-  });
+  io.emit('stats', { online: io.sockets.sockets.size, waiting: totalWaiting, chatting: pairs.size / 2 });
 }
 
 function commonInterests(a, b) {
@@ -374,53 +330,31 @@ function removeFromAllQueues(socket) {
 
 function tryMatch(socket, interests = [], room = '') {
   removeFromAllQueues(socket);
-
   const roomKey = VALID_ROOMS.has(room) ? room : '';
   const queue   = getQueue(roomKey);
   const random  = getQueue('');
 
-  // ── 1. Same room + common interests ──
   if (roomKey !== '') {
     const idx = queue.findIndex(e => commonInterests(interests, e.interests).length > 0);
-    if (idx !== -1) {
-      doMatch({ socket, interests, room: roomKey }, queue.splice(idx, 1)[0]);
-      return;
-    }
+    if (idx !== -1) { doMatch({ socket, interests, room: roomKey }, queue.splice(idx, 1)[0]); return; }
   }
+  if (roomKey !== '' && queue.length > 0) { doMatch({ socket, interests, room: roomKey }, queue.shift()); return; }
+  if (roomKey === '' && random.length > 0) { doMatch({ socket, interests, room: '' }, random.shift()); return; }
 
-  // ── 2. Same room (any interests) ──
-  if (roomKey !== '' && queue.length > 0) {
-    doMatch({ socket, interests, room: roomKey }, queue.shift());
-    return;
-  }
-
-  // ── 3. Random queue match (no room filter) ──
-  if (roomKey === '' && random.length > 0) {
-    doMatch({ socket, interests, room: '' }, random.shift());
-    return;
-  }
-
-  // ── 4. No match found → add to queue with fallback timer ──
   const entry = { socket, interests, room: roomKey, timer: null };
-
   if (roomKey !== '') {
-    // After ROOM_TIMEOUT, fall back to random queue
     entry.timer = setTimeout(() => {
       removeFromAllQueues(socket);
-      // Try random queue
       if (random.length > 0) {
         doMatch({ socket, interests, room: '' }, random.shift());
         socket.emit('waiting_fallback');
       } else {
-        // Join random queue ourselves
-        const fallbackEntry = { socket, interests, room: '', timer: null };
-        random.push(fallbackEntry);
+        random.push({ socket, interests, room: '', timer: null });
         socket.emit('waiting_fallback');
         broadcastStats();
       }
     }, ROOM_TIMEOUT);
   }
-
   queue.push(entry);
   socket.emit('waiting');
   broadcastStats();
@@ -446,7 +380,54 @@ function forwardToPartner(socket, event, data) {
   }
 }
 
+// ═══════════════════════════════════════════════════════
+//  KEEP IN TOUCH (KIT)
+//  - kitPending : Map<socketId, partnerId>  (one side requested)
+//  - kitCodes   : Map<code, { socketAId, socketBId, expiresAt }>
+// ═══════════════════════════════════════════════════════
+const kitPending = new Map();
+const kitCodes   = new Map();
+const KIT_EXPIRY = 48 * 60 * 60 * 1000; // 48h
+
+function generateKITCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return kitCodes.has(code) ? generateKITCode() : code;
+}
+
+// Clean expired codes every hour
+setInterval(() => {
+  const now = Date.now();
+  for (const [code, data] of kitCodes.entries()) {
+    if (now > data.expiresAt) kitCodes.delete(code);
+  }
+}, 60 * 60 * 1000);
+
 // ── Socket connections ──
+
+// ═══════════════════════════════════════════
+//  KEEP IN TOUCH (KIT)
+// ═══════════════════════════════════════════
+const kitCodes   = new Map(); // code → { socketAId, socketBId, expiresAt }
+const kitPending = new Map(); // socketId → partnerId (one side requested)
+const KIT_EXPIRY = 48 * 60 * 60 * 1000; // 48h
+
+function generateKITCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 6; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return kitCodes.has(code) ? generateKITCode() : code;
+}
+
+// Clean expired codes every hour
+setInterval(() => {
+  const now = Date.now();
+  for (const [code, data] of kitCodes.entries()) {
+    if (now > data.expiresAt) kitCodes.delete(code);
+  }
+}, 60 * 60 * 1000);
+
 io.on('connection', async (socket) => {
   const ip = getIPFromSocket(socket);
   socketIPMap.set(socket.id, ip);
@@ -471,25 +452,34 @@ io.on('connection', async (socket) => {
     return true;
   }
 
-  socket.on('find_partner', ({ interests, room } = {}) => {
-    tryMatch(socket, interests || [], room || '');
-  });
+  socket.on('find_partner', ({ interests, room } = {}) => tryMatch(socket, interests || [], room || ''));
 
   socket.on('message', (data) => {
     if (!socketAllowed('message')) return socket.emit('rate_limited', { type: 'message' });
     forwardToPartner(socket, 'message', data);
   });
 
-  socket.on('typing', (isTyping) => forwardToPartner(socket, 'typing', isTyping));
+  socket.on('typing', (v) => forwardToPartner(socket, 'typing', v));
 
   socket.on('next', ({ room } = {}) => {
     if (!socketAllowed('next')) return socket.emit('rate_limited', { type: 'next' });
+    kitPending.delete(socket.id);
     disconnect(socket);
     tryMatch(socket, [], room || '');
   });
 
-  socket.on('stop',       () => { disconnect(socket); socket.emit('stopped'); broadcastStats(); });
-  socket.on('disconnect', () => { disconnect(socket); socketIPMap.delete(socket.id); });
+  socket.on('stop', () => {
+    kitPending.delete(socket.id);
+    disconnect(socket);
+    socket.emit('stopped');
+    broadcastStats();
+  });
+
+  socket.on('disconnect', () => {
+    kitPending.delete(socket.id);
+    disconnect(socket);
+    socketIPMap.delete(socket.id);
+  });
 
   socket.on('webrtc_offer',         (data) => forwardToPartner(socket, 'webrtc_offer', data));
   socket.on('webrtc_answer',        (data) => forwardToPartner(socket, 'webrtc_answer', data));
@@ -497,6 +487,58 @@ io.on('connection', async (socket) => {
   socket.on('webrtc_video_toggle',  (data) => forwardToPartner(socket, 'webrtc_video_toggle', data));
   socket.on('webrtc_audio_toggle',  (data) => forwardToPartner(socket, 'webrtc_audio_toggle', data));
   socket.on('webrtc_screen_share',  (data) => forwardToPartner(socket, 'webrtc_screen_share', data));
+
+  // ── Keep in Touch ──
+  socket.on('kit_request', () => {
+    const partnerId = pairs.get(socket.id);
+    if (!partnerId) return;
+    const partnerSocket = io.sockets.sockets.get(partnerId);
+    if (!partnerSocket) return;
+
+    if (kitPending.has(partnerId) && kitPending.get(partnerId) === socket.id) {
+      // Both agreed → generate code
+      kitPending.delete(partnerId);
+      kitPending.delete(socket.id);
+      const code = generateKITCode();
+      kitCodes.set(code, { socketAId: socket.id, socketBId: partnerId, expiresAt: Date.now() + KIT_EXPIRY });
+      socket.emit('kit_matched', { code });
+      partnerSocket.emit('kit_matched', { code });
+    } else {
+      // First to request
+      kitPending.set(socket.id, partnerId);
+      socket.emit('kit_pending');
+      partnerSocket.emit('kit_stranger_requested');
+    }
+  });
+
+  socket.on('kit_cancel', () => {
+    kitPending.delete(socket.id);
+    forwardToPartner(socket, 'kit_cancelled', {});
+  });
+
+  socket.on('kit_reconnect', ({ code } = {}) => {
+    if (!code) return socket.emit('kit_error', { message: 'Invalid code.' });
+    const upper = code.toUpperCase().trim();
+    const entry = kitCodes.get(upper);
+    if (!entry) return socket.emit('kit_error', { message: 'Code not found or expired.' });
+    if (Date.now() > entry.expiresAt) {
+      kitCodes.delete(upper);
+      return socket.emit('kit_error', { message: 'This code has expired.' });
+    }
+    const otherSocketId = entry.socketAId === socket.id ? entry.socketBId : entry.socketAId;
+    const otherSocket   = io.sockets.sockets.get(otherSocketId);
+    if (!otherSocket) {
+      kitCodes.delete(upper);
+      return socket.emit('kit_error', { message: 'The other person is no longer online.' });
+    }
+    kitCodes.delete(upper);
+    doMatch(
+      { socket, interests: [], room: '', timer: null },
+      { socket: otherSocket, interests: [], room: '', timer: null }
+    );
+    socket.emit('kit_reconnect_ok');
+    otherSocket.emit('kit_reconnect_ok');
+  });
 });
 
 const PORT = process.env.PORT || 3443;
