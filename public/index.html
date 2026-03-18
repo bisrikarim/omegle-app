@@ -217,6 +217,17 @@
     .btn-report { background: transparent; border: 1px solid var(--danger); color: var(--danger); padding: 7px 14px; font-size: 0.75rem; font-family: 'DM Mono', monospace; border-radius: 2px; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px; }
     .btn-report:hover { background: var(--danger); color: #fff; }
 
+    /* Country filter */
+    .country-filter-wrap { display: flex; align-items: center; }
+    .country-select {
+      background: var(--surface); border: 1px solid var(--border-light); color: var(--muted);
+      padding: 5px 10px; font-family: 'DM Mono', monospace; font-size: 0.68rem;
+      border-radius: 2px; cursor: pointer; outline: none; transition: border-color 0.2s, color 0.2s;
+      max-width: 150px;
+    }
+    .country-select:hover, .country-select:focus { border-color: var(--accent); color: var(--text); }
+    .country-select.active { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
     /* Keep in Touch button in chat */
     .btn-kit {
       background: transparent; border: 1px solid rgba(74,222,128,0.4); color: var(--green);
@@ -692,6 +703,11 @@
           <span class="room-badge" id="room-badge" style="display:none"></span>
         </div>
         <div class="chat-actions">
+          <div class="country-filter-wrap" id="country-filter-wrap">
+            <select id="country-select" class="country-select" onchange="setCountryFilter(this.value)" title="Filter next stranger by country">
+              <option value="">🌍 Any country</option>
+            </select>
+          </div>
           <button class="btn-kit" id="btn-kit" onclick="requestKIT()" style="display:none"><i class="fa-solid fa-link"></i> Keep in touch</button>
           <button class="btn-next" onclick="nextChat()"><i class="fa-solid fa-forward-step"></i> Next</button>
           <button class="btn-stop" onclick="stopChat()"><i class="fa-solid fa-stop"></i> Stop</button>
@@ -762,6 +778,7 @@
 <script>
 const socket = io();
 let isTyping = false, chatMode = 'text', myRole = null, selectedRoom = '';
+let selectedCountryFilter = ''; // '' = any, 'FR' = France, etc.
 let pc = null, localStream = null, camEnabled = true, micEnabled = true;
 let ICE_SERVERS = null, turnCredentialsPromise = null;
 let kitRequestSent = false, currentKITCode = null;
@@ -828,8 +845,56 @@ function renderTagsDesktop() { const el = document.getElementById('tags-list-d')
 document.getElementById('interests-input-d').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addTagDesktop(); } });
 
 function startChat() { showScreen('waiting-screen'); socket.emit('find_partner', { interests: userTags, room: selectedRoom }); }
+
+// ── Country filter ──
+const COUNTRIES = [
+  ['AF','Afghanistan'],['AL','Albania'],['DZ','Algeria'],['AR','Argentina'],['AU','Australia'],
+  ['AT','Austria'],['BE','Belgium'],['BR','Brazil'],['CA','Canada'],['CL','Chile'],
+  ['CN','China'],['CO','Colombia'],['HR','Croatia'],['CZ','Czech Republic'],['DK','Denmark'],
+  ['EG','Egypt'],['FI','Finland'],['FR','France'],['DE','Germany'],['GH','Ghana'],
+  ['GR','Greece'],['HU','Hungary'],['IN','India'],['ID','Indonesia'],['IR','Iran'],
+  ['IQ','Iraq'],['IE','Ireland'],['IL','Israel'],['IT','Italy'],['JP','Japan'],
+  ['JO','Jordan'],['KE','Kenya'],['KW','Kuwait'],['LB','Lebanon'],['LY','Libya'],
+  ['MY','Malaysia'],['MX','Mexico'],['MA','Morocco'],['NL','Netherlands'],['NZ','New Zealand'],
+  ['NG','Nigeria'],['NO','Norway'],['PK','Pakistan'],['PE','Peru'],['PH','Philippines'],
+  ['PL','Poland'],['PT','Portugal'],['QA','Qatar'],['RO','Romania'],['RU','Russia'],
+  ['SA','Saudi Arabia'],['SN','Senegal'],['ZA','South Africa'],['ES','Spain'],['SE','Sweden'],
+  ['CH','Switzerland'],['SY','Syria'],['TN','Tunisia'],['TR','Turkey'],['UA','Ukraine'],
+  ['AE','United Arab Emirates'],['GB','United Kingdom'],['US','United States'],['VE','Venezuela'],
+  ['VN','Vietnam'],['YE','Yemen']
+];
+
+function populateCountrySelect(myCountry) {
+  const sel = document.getElementById('country-select');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">🌍 Any country</option>';
+  COUNTRIES.forEach(([code, name]) => {
+    const opt = document.createElement('option');
+    opt.value = code;
+    opt.textContent = name;
+    if (code === myCountry) opt.textContent = '📍 ' + name + ' (you)';
+    sel.appendChild(opt);
+  });
+}
+
+function setCountryFilter(country) {
+  selectedCountryFilter = country;
+  const sel = document.getElementById('country-select');
+  if (sel) sel.classList.toggle('active', !!country);
+  socket.emit('set_country_filter', { country: country || null });
+}
+
+socket.on('my_country', ({ country }) => {
+  populateCountrySelect(country);
+  // Pré-sélectionne le pays détecté automatiquement
+  if (country) {
+    const sel = document.getElementById('country-select');
+    if (sel) sel.value = country;
+    setCountryFilter(country);
+  }
+});
 function cancelSearch() { socket.emit('stop'); goHome(); }
-function nextChat() { cleanup(); socket.emit('next', { room: selectedRoom }); showScreen('waiting-screen'); }
+function nextChat() { cleanup(); socket.emit('next', { room: selectedRoom, country: selectedCountryFilter || null }); showScreen('waiting-screen'); }
 function stopChat() { cleanup(); socket.emit('stop'); goHome(); }
 
 socket.on('waiting', () => showScreen('waiting-screen'));
